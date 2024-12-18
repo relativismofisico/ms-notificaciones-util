@@ -9,8 +9,8 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>co.com</groupId>
-	<artifactId>notificaciones</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<artifactId>ms-notificaciones-util</artifactId>
+	<version>1.0.0</version>
 	<name>ms-notificaciones-util</name>
 	<description>microservicio para el envio de correos y sms</description>
 	<url/>
