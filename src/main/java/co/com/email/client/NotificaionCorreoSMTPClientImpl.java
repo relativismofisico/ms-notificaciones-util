@@ -5,6 +5,7 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
+import co.com.email.dto.CorreoSMTPRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -12,7 +13,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import co.com.email.dto.AdjuntoDto;
-import co.com.email.dto.CorreoSMTPRequestDto;
 import co.com.email.util.TextosUtil;
 import jakarta.mail.Message;
 import jakarta.mail.internet.AddressException;
