@@ -1,3 +1,6 @@
+target/
+build/
+
 # Compiled class file
 *.class
 
@@ -22,3 +25,22 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+###InteliliJ IDEA ###
+.idea
+*.Ds_Store
+*.iws
+*.iml
+*.ipr
+.Ds_Store
+out/
+
+### NetBeans ###
+/nbproject/private
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+
+### Vs Code ###
+.vscode/
