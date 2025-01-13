@@ -50,6 +50,7 @@ public class CorreoSMTPRequestDto {
     @Schema(name="adjuntos", description="Archivos adjuntos que se enviaran junto al correo")
     private List<AdjuntoDto> adjuntos;
 
+    //METERLE CAMPOS DE ARRAYS PARA VARIABLES
     @Override
     public String toString(){
         return "CorreoSMTPRequestSto{" +
