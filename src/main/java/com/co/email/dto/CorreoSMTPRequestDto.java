@@ -28,7 +28,7 @@ public class CorreoSMTPRequestDto {
     @Schema(name="destinatarios", description="listado de emails de destinatarios")
     private List<String> destinatarios;
 
-    @Schema(name="", destinatariosCcdescription="listado de emails de destinatarios con Copia")
+    @Schema(name="destinatariosCc", description="listado de emails de destinatarios con Copia")
     private List<String> destinatariosCc;
 
     @Schema(name="destinatariosBcc", description="listado de emails de destinatarios con copia oculta")
@@ -56,5 +56,5 @@ public class CorreoSMTPRequestDto {
                 '}';
     }
 
-    private List<Offer> offerings;
+   // private List<Offer> offerings;
 }

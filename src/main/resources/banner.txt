@@ -1,0 +1,15 @@
+,--,--,--. ,---.,-----.,--,--,  ,---. ,-'  '-.`--'/  .-'`--' ,---. ,--,--.,---.`--' ,---. ,--,--, ,---.  ,---.,-----.,--.,--.,-'  '-.`--'|  |
+|        |(  .-''-----'|      \| .-. |'-.  .-',--.|  `-,,--.| .--'' ,-.  | .--',--.| .-. ||      \ .-. :(  .-''-----'|  ||  |'-.  .-',--.|  |
+|  |  |  |.-'  `)      |  ||  |' '-' '  |  |  |  ||  .-'|  |\ `--.\ '-'  \ `--.|  |' '-' '|  ||  \   --..-'  `)      '  ''  '  |  |  |  ||  |
+`--`--`--'`----'       `--''--' `---'   `--'  `--'`--'  `--' `---' `--`--'`---'`--' `---' `--''--'`----'`----'        `----'   `--'  `--'`--'
+
+MS: ${spring.application.name}
+PROFILE: ${spring.profiles.active}
+PROFILE CLOUD CONFIG: ${spring.cloud.config.profile}
+CONTEXT PATH: ${server.servlet.context-path}
+SPRING CLOUD CONFIG NAME: ${spring.cloud.config.name}
+SPRING VAULT APP NAME: ${spring.cloud.vault.application-name}
+JAVA_OPTS: ${JAVA_OPTS}
+PORT: ${server.port}
+SPRING BOOT: ${spring-boot.version}
+JAVA: ${java.version}

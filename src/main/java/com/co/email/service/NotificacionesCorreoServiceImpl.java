@@ -70,7 +70,7 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
             helper.setTo(destinatariosArray);
 
             //Agrega Destinatarios con Copia
-            List<String> destinatariosListCc = correoSMTPRequestDto.getDestinatariosCc();
+            /*List<String> destinatariosListCc = correoSMTPRequestDto.getDestinatariosCc();
             if (destinatariosListCc != null) {
                 String[] destinatariosArrayCc = destinatariosListCc.toArray(new String[0]);
                 helper.addCc(Arrays.toString(destinatariosArrayCc));
@@ -96,7 +96,7 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
                         log.warn("El archivo adjunto '{}' no existe o no es válido", adjunto);
                     }
                 }
-            }
+            }*/
 
             // Configurar el contenido del correo utilizando Thymeleaf
             Context context = new Context();
@@ -104,7 +104,7 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
             // Properties to show up in Template after stored in Context
             Map<String, Object> properties = new HashMap<String, Object>();
             properties.put("name", correoSMTPRequestDto.getNombreRemitente());
-            properties.put("offerings", correoSMTPRequestDto.getOfferings());
+            //properties.put("offerings", correoSMTPRequestDto.getOfferings());
 
             context.setVariables(properties);
 
