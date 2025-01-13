@@ -1,11 +1,9 @@
 package com.co.email.service;
 
 import com.co.email.constantes.Constantes;
-import com.co.email.dto.AdjuntoDto;
 import com.co.email.dto.CorreoSMTPRequestDto;
 import com.co.email.util.TextosUtil;
 import com.co.email.util.ValidadorUtil;
-import jakarta.activation.DataSource;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,14 +15,16 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import java.io.File;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
 
-@Service
 @Slf4j
+@Service
 public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoService {
 
     @Autowired(required = false)
@@ -40,7 +40,8 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
     @Override
     public void htmlSend(CorreoSMTPRequestDto correoSMTPRequestDto) {
 
-        log.info("[EmailService][htmlSend] Inicio enviarCorreoSMTP: " + correoSMTPRequestDto.toString());
+        log.info("[NotificacionesCorreoServiceImpl][htmlSend] Inicio enviarCorreoSMTP: "
+                + correoSMTPRequestDto.toString());
 
         validaCorreoSMTP(correoSMTPRequestDto);
 
@@ -52,14 +53,16 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
 
         try {
             //Prepara la firma del correo
-            correoSMTPRequestDto.setFirma(TextosUtil.prepararFirmaCorreo(correoSMTPRequestDto.getFirma()));
+            correoSMTPRequestDto.setFirma(TextosUtil.prepararFirmaCorreo(
+                    correoSMTPRequestDto.getFirma()));
 
             //Crea el mensaje MIME
             MimeMessage message = emailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message);
 
             //Configura el remitente
-            helper.setFrom(correoSMTPRequestDto.getCorreoRemitente(),correoSMTPRequestDto.getNombreRemitente());
+            helper.setFrom(correoSMTPRequestDto.getCorreoRemitente(),
+                    correoSMTPRequestDto.getNombreRemitente());
 
             // Convertir la lista de destinatarios a un array y asignarla
             List<String> destinatariosList = correoSMTPRequestDto.getDestinatarios();
@@ -81,13 +84,13 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
             if (destinatariosListBcc != null) {
                 String[] destinatariosArrayBcc = destinatariosListBcc.toArray(new String[0]);
                 helper.addBcc(Arrays.toString(destinatariosArrayBcc));
-            }
+            }*/
 
             //configura el asunto
             helper.setSubject(correoSMTPRequestDto.getAsunto());
 
             //Agrega Destinatarios con Copia Oculta
-            List<AdjuntoDto> adjuntos = correoSMTPRequestDto.getAdjuntos();
+           /* List<AdjuntoDto> adjuntos = correoSMTPRequestDto.getAdjuntos();
             if (adjuntos != null && !adjuntos.isEmpty()) {
                 for (AdjuntoDto adjunto : adjuntos) {
                     try {
@@ -108,7 +111,8 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
 
             context.setVariables(properties);
 
-            String html = templateEngine.process("emails/" + correoSMTPRequestDto.getCuerpoHtml(), context);
+            String html = templateEngine.process("emails/"
+                    + correoSMTPRequestDto.getCuerpoHtml(), context);
 
 
             helper.setText(html, true);
@@ -118,7 +122,8 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
             //Envia el correo
             emailSender.send(message);
             log.info("simpleSend: Email Queued");
-            log.info("htmlSend: Email enviado correctamente a los destinatarios: {}", destinatariosList);
+            log.info("htmlSend: Email enviado correctamente a los destinatarios: {}",
+                    destinatariosList);
 
 
         }
@@ -146,26 +151,34 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
 
         Map<Boolean, List<String>> mails;
         if (nonNull(requestDto.getDestinatarios())) {
-            mails = requestDto.getDestinatarios().stream().collect(Collectors.groupingBy(ValidadorUtil::validateEmail));
-            mails.getOrDefault(Boolean.FALSE, empty).forEach(x -> log.warn("[NotificacionesCorreoServiceImpl][validaCorreoSMTP] El destinatario \"{}\" no cumple con el formato de correo ", x));
+            mails = requestDto.getDestinatarios().stream().collect(
+                    Collectors.groupingBy(ValidadorUtil::validateEmail));
+            mails.getOrDefault(Boolean.FALSE, empty).forEach(
+                    x -> log.warn("[NotificacionesCorreoServiceImpl][validaCorreoSMTP] " +
+                            "El destinatario \"{}\" no cumple con el formato de correo ", x));
             requestDto.setDestinatarios(mails.getOrDefault(Boolean.TRUE, empty));
             mails.clear();
         }
 
         if (nonNull(requestDto.getDestinatariosCc())) {
-            mails = requestDto.getDestinatariosCc().stream().collect(Collectors.groupingBy(ValidadorUtil::validateEmail));
-            mails.getOrDefault(Boolean.FALSE, empty).forEach(x -> log.warn("[NotificacionesCorreoServiceImpl][validaCorreoSMTP]El destinatarioCc \"{}\" no cumple con el formato de correo ", x));
+            mails = requestDto.getDestinatariosCc().stream().collect(
+                    Collectors.groupingBy(ValidadorUtil::validateEmail));
+            mails.getOrDefault(Boolean.FALSE, empty).forEach(
+                    x -> log.warn("[NotificacionesCorreoServiceImpl][validaCorreoSMTP]" +
+                            "El destinatarioCc \"{}\" no cumple con el formato de correo ", x));
             requestDto.setDestinatariosCc(mails.getOrDefault(Boolean.TRUE, empty));
             mails.clear();
         }
         if (nonNull(requestDto.getDestinatariosBcc())) {
-            mails = requestDto.getDestinatariosBcc().stream().collect(Collectors.groupingBy(ValidadorUtil::validateEmail));
-            mails.getOrDefault(Boolean.FALSE, empty).forEach(x -> log.warn("[NotificacionesCorreoServiceImpl][validaCorreoSMTP] El getDestinatariosBcc \"{}\" no cumple con el formato de correo ", x));
+            mails = requestDto.getDestinatariosBcc().stream().collect(
+                    Collectors.groupingBy(ValidadorUtil::validateEmail));
+            mails.getOrDefault(Boolean.FALSE, empty).forEach(
+                    x -> log.warn("[NotificacionesCorreoServiceImpl][validaCorreoSMTP] " +
+                            "El getDestinatariosBcc \"{}\" no cumple con el formato de correo ", x));
             requestDto.setDestinatariosBcc(mails.getOrDefault(Boolean.TRUE, empty));
             mails.clear();
         }
         validarCantidadDestinatarios(requestDto);
-
     }
 
     /**
@@ -173,7 +186,6 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
      * un correo a más destinatarios que los aquí especificados en cualquiera de los
      * tres campos, se enviará una advertencia a la autoridad responsable. Lo mismo
      * si la suma de las tres cantidades excede dos veces este límite.
-     *
      * @param requestDto the request dto
      */
     public void validarCantidadDestinatarios(CorreoSMTPRequestDto requestDto) {
@@ -198,7 +210,8 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
             destinatariosBcc = requestDto.getDestinatariosBcc().toString();
         }
 
-        Integer totalDestinatarios = cantDestinatariosDirectos + cantDestinatariosCC + cantDestinatariosBCC;
+        Integer totalDestinatarios = cantDestinatariosDirectos + cantDestinatariosCC
+                + cantDestinatariosBCC;
 
         if (totalDestinatarios <= 0) {
             log.info("No existen destinatarios, destinatariosCC o destinatariosBCC validos");
@@ -211,7 +224,8 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
                 || totalDestinatarios > (this.cantidadLimiteDestinatarios * 2)) {
 
             StringBuilder msgWarn = new StringBuilder(
-                    "[Warning Mail] - [ Cantidad límite de destinatarios en los campos To:, Cc: y Bcc excede el limite recomendado. [");
+                    "[Warning Mail] - [ Cantidad límite de destinatarios en los campos To:, " +
+                            "Cc: y Bcc excede el limite recomendado. [");
             msgWarn.append(" \n nombreRemitente: ")
                     .append(requestDto.getNombreRemitente())
                     .append(" \n mailRemitente: ")
@@ -223,7 +237,8 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
             msgWarn.append(" \n Destinatarios BCC: ").append(destinatariosBcc);
             msgWarn.append(" \n cuerpoTexto: ").append(requestDto.getCuerpoTexto()).append("]");
 
-            log.warn("[NotificacionesCorreoServiceImpl][validarCantidadDestinatarios][BCI_FINOK] metodo ejecutado con advertencia: " + msgWarn);
+            log.warn("[NotificacionesCorreoServiceImpl][validarCantidadDestinatarios][BCI_FINOK]" +
+                    " metodo ejecutado con advertencia: " + msgWarn);
         }
     }
 

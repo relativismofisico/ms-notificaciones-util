@@ -97,7 +97,8 @@ public class TextosUtil {
             case PARRAFO_CENTRADO_CON_RELLENO:
                 int izquierda = (largo) / 2;
                 return StringUtils.stripToNull("") + estaLinea
-                        + (alineacion == PARRAFO_CENTRADO_CON_RELLENO ? StringUtils.stripToNull("") : "")
+                        + (alineacion == PARRAFO_CENTRADO_CON_RELLENO ?
+                        StringUtils.stripToNull("") : "")
                         + EOL;
 
             case PARRAFO_JUSTIFICADO:
@@ -107,7 +108,8 @@ public class TextosUtil {
             case PARRAFO_ALINEDO_A_LA_IZQUIERDA_CON_RELLENO:
             default:
                 return estaLinea
-                        + (alineacion == PARRAFO_ALINEDO_A_LA_IZQUIERDA_CON_RELLENO ? StringUtils.stripToNull("") : "")
+                        + (alineacion == PARRAFO_ALINEDO_A_LA_IZQUIERDA_CON_RELLENO ?
+                        StringUtils.stripToNull("") : "")
                         + EOL;
         }
     }
@@ -125,7 +127,8 @@ public class TextosUtil {
         }
 
         if (firmaCorreo.indexOf(EOLchar) == -1) {
-            firmaCorreo = parrafo(firmaCorreo, ANCHO_DE_LINEA_EN_EMAIL, PARRAFO_ALINEDO_A_LA_IZQUIERDA);
+            firmaCorreo = parrafo(firmaCorreo,
+                    ANCHO_DE_LINEA_EN_EMAIL, PARRAFO_ALINEDO_A_LA_IZQUIERDA);
         } else {
             firmaCorreo += EOL;
         }
@@ -145,7 +148,8 @@ public class TextosUtil {
         contenido = contenido == null ? "" : contenido;
         firma = firma == null ? "" : firma;
 
-        return contenido.concat(firma.equals("")? "" : TextosUtil.EOL.concat("-- ").concat(TextosUtil.EOL).concat(firma));
+        return contenido.concat(firma.equals("")? "" :
+                TextosUtil.EOL.concat("-- ").concat(TextosUtil.EOL).concat(firma));
     }
 
 
