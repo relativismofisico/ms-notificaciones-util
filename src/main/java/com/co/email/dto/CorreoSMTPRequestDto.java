@@ -28,11 +28,7 @@ public class CorreoSMTPRequestDto {
     @Schema(name="destinatarios", description="listado de emails de destinatarios")
     private List<String> destinatarios;
 
-   /* @NotEmpty
-    @Schema(name="destinatarios", description="listado de emails de destinatarios")
-    private String destinatarios;*/
-
-    @Schema(name="destinatariosCc", description="listado de emails de destinatarios con Copia")
+    @Schema(name="", destinatariosCcdescription="listado de emails de destinatarios con Copia")
     private List<String> destinatariosCc;
 
     @Schema(name="destinatariosBcc", description="listado de emails de destinatarios con copia oculta")

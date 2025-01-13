@@ -1,9 +1,11 @@
 package com.co.email.service;
 
 import com.co.email.constantes.Constantes;
+import com.co.email.dto.AdjuntoDto;
 import com.co.email.dto.CorreoSMTPRequestDto;
 import com.co.email.util.TextosUtil;
 import com.co.email.util.ValidadorUtil;
+import jakarta.activation.DataSource;
 import jakarta.mail.internet.MimeMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +17,8 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.File;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.nonNull;
@@ -69,8 +69,34 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
             String[] destinatariosArray = destinatariosList.toArray(new String[0]);
             helper.setTo(destinatariosArray);
 
+            //Agrega Destinatarios con Copia
+            List<String> destinatariosListCc = correoSMTPRequestDto.getDestinatariosCc();
+            if (destinatariosListCc != null) {
+                String[] destinatariosArrayCc = destinatariosListCc.toArray(new String[0]);
+                helper.addCc(Arrays.toString(destinatariosArrayCc));
+            }
+
+            //Agrega Destinatarios con Copia Oculta
+            List<String> destinatariosListBcc = correoSMTPRequestDto.getDestinatariosBcc();
+            if (destinatariosListBcc != null) {
+                String[] destinatariosArrayBcc = destinatariosListBcc.toArray(new String[0]);
+                helper.addBcc(Arrays.toString(destinatariosArrayBcc));
+            }
+
             //configura el asunto
             helper.setSubject(correoSMTPRequestDto.getAsunto());
+
+            //Agrega Destinatarios con Copia Oculta
+            List<AdjuntoDto> adjuntos = correoSMTPRequestDto.getAdjuntos();
+            if (adjuntos != null && !adjuntos.isEmpty()) {
+                for (AdjuntoDto adjunto : adjuntos) {
+                    try {
+                        helper.addAttachment(adjunto.getNombreArchivo(), (DataSource) adjunto);
+                    }catch (Exception e){
+                        log.warn("El archivo adjunto '{}' no existe o no es válido", adjunto);
+                    }
+                }
+            }
 
             // Configurar el contenido del correo utilizando Thymeleaf
             Context context = new Context();
