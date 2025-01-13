@@ -13,7 +13,7 @@
 				"header": [],
 				"body": {
 					"mode": "raw",
-					"raw": "{   \r\n    \"nombreRemitente\": \"John Fredy Redondo\",\r\n    \"correoRemitente\": \"relativismofisico@gmail.com\",\r\n    \"asunto\": \"Welcome new constomer\", \r\n    \"destinatarios\": [\"jhon.redondo1gmail.com\", \"ruby.redondo1962@gmail.com\"],\r\n    \"cuerpoTexto\": \"John Redondo\",\r\n    \"cuerpoHtml\": \"newCustomerPlus.html\",\r\n    \"firma\": \"newCustomerPlus.html\",\r\n    \"adjuntos\":[\r\n        {\r\n           \"archivo\": \"destinatarios.txt\"\r\n        }\r\n    ] ,\r\n    \"offerings\":[\r\n        {\r\n           \"id\": \"1\", \r\n           \"name\": \"Learn Java\",\r\n           \"link\": \"htpps://www.google.com\"\r\n        },\r\n        {\r\n           \"id\": \"2\", \r\n           \"name\": \"Learn Spring Boot\",\r\n           \"link\": \"htpps://www.google.com\"\r\n        },\r\n        {\r\n           \"id\": \"3\", \r\n           \"name\": \"Learn Amazon\",\r\n           \"link\": \"htpps://www.google.com\"\r\n        }\r\n    ] \r\n\r\n}",
+					"raw": "{   \r\n    \"nombreRemitente\": \"John Fredy Redondo\",\r\n    \"correoRemitente\": \"relativismofisico@gmail.com\",\r\n    \"asunto\": \"Welcome new constomer\", \r\n    \"destinatarios\": [\"david.gaviria.tatis@gmail.com\"],\r\n    \"cuerpoTexto\": \"John Redondo\",\r\n    \"cuerpoHtml\": \"newCustomerPlus.html\",\r\n    \"firma\": \"Atentamente, Nombre de la Empresa\"\r\n\r\n}",
 					"options": {
 						"raw": {
 							"language": "json"

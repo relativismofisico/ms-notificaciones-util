@@ -58,7 +58,8 @@ public class ExceptionManager {
         }
 
         log.error(" Llamada a endpoint [%s] método [%s]: Cuerpo de mensaje posee uno o más campos no válidos",
-                validateLoggerInput(canonicalize(request.getRequestURI())), validateLoggerInput(canonicalize(request.getMethod())));
+                validateLoggerInput(canonicalize(request.getRequestURI())),
+                validateLoggerInput(canonicalize(request.getMethod())));
 
         return new ResponseEntity<>("", new HttpHeaders(), HttpStatus.BAD_REQUEST);
     }

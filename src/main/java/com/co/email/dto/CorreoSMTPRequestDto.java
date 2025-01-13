@@ -10,14 +10,17 @@ import java.util.List;
 @Data
 public class CorreoSMTPRequestDto {
 
+    //SE DEBE DE BORRAR
     @Schema(name="nombreRemitente", description="Nombre del remitente del correo electronico")
     private String nombreRemitente;
 
+    //SE BORRA
     @NotNull
     @NotEmpty
     @Schema(name="remitente", description="direccion email del remitente del correo electronico")
     private String correoRemitente;
 
+    //SE BORRA, SALE PERO DEPENDE DEL CODIGO DE LA PLANTILLA ENVIADA
     @NotNull
     @NotEmpty
     @Schema(name="asunto", description="asunto del correo electronico")
@@ -40,6 +43,7 @@ public class CorreoSMTPRequestDto {
     @Schema(name="cuerpoHTML", description="Corresponde al codigo HTML a ubicarse  en el cuerpo del correo")
     private String cuerpoHtml = "newCustomer.html";
 
+    //SE BORRA, Se debe sacar de una tabla y dependa de la plantilla
     @Schema(name="firma", description="texto usado para firmar el correo")
     private String firma;
 
@@ -55,6 +59,6 @@ public class CorreoSMTPRequestDto {
                 ", destinatarios='" + destinatarios +
                 '}';
     }
-
+    //Se piensa para link de verificaciones
    // private List<Offer> offerings;
 }

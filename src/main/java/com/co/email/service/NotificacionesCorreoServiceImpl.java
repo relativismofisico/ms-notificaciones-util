@@ -61,6 +61,7 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
             MimeMessageHelper helper = new MimeMessageHelper(message);
 
             //Configura el remitente
+            //REFACTORIZAR DEPENDIENDO DEL PORPORTIES
             helper.setFrom(correoSMTPRequestDto.getCorreoRemitente(),
                     correoSMTPRequestDto.getNombreRemitente());
 
@@ -86,8 +87,6 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
                 helper.addBcc(Arrays.toString(destinatariosArrayBcc));
             }*/
 
-            //configura el asunto
-            helper.setSubject(correoSMTPRequestDto.getAsunto());
 
             //Agrega Destinatarios con Copia Oculta
            /* List<AdjuntoDto> adjuntos = correoSMTPRequestDto.getAdjuntos();
@@ -101,7 +100,15 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
                 }
             }*/
 
+
+            //configura el asunto
+            //REFACTORIZAR DEPENDIENDO DEL CODIGO DE LA PLANTILLA
+            helper.setSubject(correoSMTPRequestDto.getAsunto());
+
+
+
             // Configurar el contenido del correo utilizando Thymeleaf
+            //REFACTORIZAR DEPENDIENDO DEL CODIGO DE PLANTILLA UTILIZADO
             Context context = new Context();
 
             // Properties to show up in Template after stored in Context
