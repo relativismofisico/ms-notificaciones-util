@@ -2,6 +2,7 @@ package com.co.email.service;
 
 import com.co.email.constantes.Constantes;
 import com.co.email.dto.CorreoSMTPRequestDto;
+import com.co.email.dto.VariablesCorreoDTO;
 import com.co.email.util.TextosUtil;
 import com.co.email.util.ValidadorUtil;
 import jakarta.mail.internet.MimeMessage;
@@ -113,13 +114,19 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
 
             // Properties to show up in Template after stored in Context
             Map<String, Object> properties = new HashMap<String, Object>();
-            properties.put("name", correoSMTPRequestDto.getNombreRemitente());
+            properties.put("name", correoSMTPRequestDto.getNombreReceptor());
             //properties.put("offerings", correoSMTPRequestDto.getOfferings());
+
+            for (VariablesCorreoDTO variable: correoSMTPRequestDto.getVariables()){
+                properties.put(variable.getNombre(), variable.getValor());
+            }
 
             context.setVariables(properties);
 
-            String html = templateEngine.process("emails/"
-                    + correoSMTPRequestDto.getCuerpoHtml(), context);
+            /*String html = templateEngine.process("emails/"
+                    + correoSMTPRequestDto.getCuerpoHtml(), context);*/
+
+            String html = templateEngine.process(correoSMTPRequestDto.getCuerpoHtml(), context);
 
 
             helper.setText(html, true);

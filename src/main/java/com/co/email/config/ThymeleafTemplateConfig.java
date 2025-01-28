@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.thymeleaf.templateresolver.StringTemplateResolver;
 
 import java.nio.charset.StandardCharsets;
 
@@ -18,12 +19,12 @@ public class ThymeleafTemplateConfig {
         return springTemplateEngine;
     }
 
-    public ClassLoaderTemplateResolver emailTemplateResolver() {
-        ClassLoaderTemplateResolver emailTemplateResolver = new ClassLoaderTemplateResolver();
-        emailTemplateResolver.setPrefix("/templates/");
-        emailTemplateResolver.setSuffix(".html");
+    public StringTemplateResolver emailTemplateResolver() {
+        StringTemplateResolver emailTemplateResolver = new StringTemplateResolver();
+        //emailTemplateResolver.setPrefix("/templates/");
+        //emailTemplateResolver.setSuffix(".html");
         emailTemplateResolver.setTemplateMode(TemplateMode.HTML);
-        emailTemplateResolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
+        //emailTemplateResolver.setCharacterEncoding(StandardCharsets.UTF_8.name());
         emailTemplateResolver.setCacheable(false);
         return emailTemplateResolver;
     }

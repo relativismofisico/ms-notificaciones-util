@@ -17,4 +17,7 @@ public class MessagesTemplates {
     private String description;
 
     private String content;
+
+    @Column(name = "email_subject")
+    private String emailSubject;
 }

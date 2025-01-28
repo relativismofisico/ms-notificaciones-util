@@ -16,4 +16,8 @@ public class TemplateVariables {
 
     @Column(name = "variable_name")
     private String variableName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "template_id")
+    private MessagesTemplates messagesTemplates;
 }

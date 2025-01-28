@@ -10,7 +10,9 @@ import java.util.List;
 @Data
 public class CorreoSMTPRequestDto {
 
-    //SE DEBE DE BORRAR
+    @Schema(name="tipoCorreo", description="Número que indica que clase de correo es el que se debe de enviar")
+    private Long tipoCorreo;
+
     @Schema(name="nombreRemitente", description="Nombre del remitente del correo electronico")
     private String nombreRemitente;
 
@@ -20,7 +22,10 @@ public class CorreoSMTPRequestDto {
     @Schema(name="remitente", description="direccion email del remitente del correo electronico")
     private String correoRemitente;
 
-    //SE BORRA, SALE PERO DEPENDE DEL CODIGO DE LA PLANTILLA ENVIADA
+    @Schema(name="nombreReceptor", description="Nombre del que recibe el correo")
+    private String nombreReceptor;
+
+    //DEPENDE DEL CODIGO DE LA PLANTILLA ENVIADA
     @NotNull
     @NotEmpty
     @Schema(name="asunto", description="asunto del correo electronico")
@@ -50,7 +55,9 @@ public class CorreoSMTPRequestDto {
     @Schema(name="adjuntos", description="Archivos adjuntos que se enviaran junto al correo")
     private List<AdjuntoDto> adjuntos;
 
-    //METERLE CAMPOS DE ARRAYS PARA VARIABLES
+    @Schema(name="variables", description="Variables con su nombre y valor para el correo")
+    private List<VariablesCorreoDTO> variables;
+
     @Override
     public String toString(){
         return "CorreoSMTPRequestSto{" +

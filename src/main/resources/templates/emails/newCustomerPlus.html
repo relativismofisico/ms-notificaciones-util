@@ -19,7 +19,9 @@
       <div>Hi <span th:text="${name}" th:remove="tag"></span></div>
       <p></p>
       <div>Gracias</div>
-      <p>Codigo para El token</p>
+      <p>Código para La verificación:</p>
+      <br><br>
+      <p th:text="${token}"></p>
       <ul th:each="offer : ${offerings}">
         <li>
           <span th:text="${offer.name}" th:remove="tag"></span>
