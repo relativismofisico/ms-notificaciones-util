@@ -9,6 +9,7 @@ import co.com.email.repositories.PersonRepository;
 import co.com.email.repositories.UserRepository;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,10 @@ public class OtpEmailServiceImpl implements OtpEmailService {
     private final UserRepository userRepository;
     private final PersonRepository personRepository;
     private final JavaMailSender mailSender;
+    private final OutboxService outboxService;
+
+    @Value("${topics.otp-email-sent}")
+    private String otpEmailSentTopic;
 
     @Override
     public void sendOtpEmail(OtpCreatedEvent event) {
@@ -55,6 +60,14 @@ public class OtpEmailServiceImpl implements OtpEmailService {
                 .replace("{{otp}}", event.getOtp());
 
         sendEmail(email, template.getEmailSubject(), html);
+
+
+        // guardar evento en outbox
+        outboxService.guardarEvento(
+                event.getIdNegociacion(),
+                otpEmailSentTopic,
+                event
+        );
     }
 
     private void sendEmail(String to, String subject, String html) {
