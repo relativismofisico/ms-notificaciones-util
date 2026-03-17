@@ -61,13 +61,6 @@ public class OtpEmailServiceImpl implements OtpEmailService {
 
         sendEmail(email, template.getEmailSubject(), html);
 
-
-        // guardar evento en outbox
-        outboxService.guardarEvento(
-                event.getIdNegociacion(),
-                otpEmailSentTopic,
-                event
-        );
     }
 
     private void sendEmail(String to, String subject, String html) {

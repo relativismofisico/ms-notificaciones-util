@@ -1,5 +1,6 @@
 package co.com.email.scheduler;
 
+import co.com.email.domain.entities.OutboxEventEntity;
 import co.com.email.domain.event.OtpCreatedEvent;
 import co.com.email.repositories.OutboxEventRepository;
 import co.com.email.service.OtpEmailService;
@@ -10,6 +11,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -18,6 +22,7 @@ public class OtpEmailScheduler {
 
     private final OutboxEventRepository outboxEventRepository;
     private final OtpEmailService otpEmailService;
+    private final ObjectMapper objectMapper;
 
     private static final String MS_PROPIETARIO = "ms-notificaciones-util";
 
@@ -25,7 +30,11 @@ public class OtpEmailScheduler {
     @Scheduled(fixedDelayString = "5000")
     public void enviarEmailsPendientes() {
         // Traer solo eventos pendientes de este MS
-        var pendientes = outboxEventRepository.findTop50ByEnviadoFalseOrderByFechaCreacionAsc();
+        List<OutboxEventEntity> pendientes =
+                outboxEventRepository.findTop50ByEnviadoFalseOrderByFechaCreacionAsc()
+                        .stream()
+                        .sorted(Comparator.comparing(OutboxEventEntity::getFechaCreacion))
+                        .toList();
 
         for (var event : pendientes) {
             if (!MS_PROPIETARIO.equals(event.getMsPropietario())) {
@@ -33,8 +42,7 @@ public class OtpEmailScheduler {
                 continue;
             }
             try {
-                OtpCreatedEvent otpEvent = // convertir JSON a OtpCreatedEvent
-                        new ObjectMapper().readValue(event.getPayload(), OtpCreatedEvent.class);
+                OtpCreatedEvent otpEvent = objectMapper.readValue(event.getPayload(), OtpCreatedEvent.class);
 
                 otpEmailService.sendOtpEmail(otpEvent);
 
@@ -44,6 +52,7 @@ public class OtpEmailScheduler {
                 outboxEventRepository.save(event);
 
             } catch (Exception e) {
+                log.error("Error procesando evento {}: {}", event.getId(), e.getMessage(), e);
                 event.setIntentos(event.getIntentos() + 1);
                 outboxEventRepository.save(event);
             }

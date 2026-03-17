@@ -25,6 +25,7 @@ public class OutboxServiceImpl implements OutboxService {
             event.setEventType(payload.getClass().getSimpleName());
             event.setPayload(payloadJson);
             event.setEnviado(false);
+            event.setMsPropietario("ms-notificaciones-util");
             event.setFechaCreacion(LocalDateTime.now());
             event.setIntentos(0);
 
