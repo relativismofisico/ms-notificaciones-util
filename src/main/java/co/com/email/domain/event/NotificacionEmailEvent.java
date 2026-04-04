@@ -18,6 +18,6 @@ public class NotificacionEmailEvent {
     private String tipoNotificacion;
     private List<DestinatarioEmail> destinatarios;
     private String asunto;
-    private Map<String, Object> variables;
+    private Map<String, Object> data;
     private LocalDateTime fecha;
 }

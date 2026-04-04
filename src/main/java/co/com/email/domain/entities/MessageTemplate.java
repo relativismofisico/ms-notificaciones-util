@@ -1,9 +1,6 @@
 package co.com.email.domain.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Lob;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
@@ -19,6 +16,7 @@ public class MessageTemplate {
     private String description;
 
     @Lob
+    @Column(columnDefinition = "LONGTEXT")
     private String content;
 
     private String emailSubject;

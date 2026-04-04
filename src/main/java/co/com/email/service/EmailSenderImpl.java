@@ -18,7 +18,7 @@ public class EmailSenderImpl implements EmailSender {
         MimeMessage message = mailSender.createMimeMessage();
 
         try {
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setTo(to);
             helper.setSubject(subject);
             helper.setText(body, true);

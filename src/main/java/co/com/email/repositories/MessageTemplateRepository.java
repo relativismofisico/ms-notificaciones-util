@@ -10,5 +10,7 @@ import java.util.Optional;
 public interface MessageTemplateRepository extends JpaRepository<MessageTemplate, Long> {
 
     Optional<MessageTemplate> findByTemplateName(String templateName);
+    Optional<MessageTemplate> findByTemplateNameAndActiveTrue(String templateName);
+
 
 }

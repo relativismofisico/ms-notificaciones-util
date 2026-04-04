@@ -1,7 +1,6 @@
 package co.com.email.service;
 
 import co.com.email.domain.entities.EmailLog;
-import co.com.email.domain.entities.MessageTemplate;
 import co.com.email.domain.event.DestinatarioEmail;
 import co.com.email.domain.event.NotificacionEmailEvent;
 import co.com.email.repositories.EmailLogRepository;
@@ -25,16 +24,12 @@ public class EmailProcessorServiceImpl implements EmailProcessorService {
     private final EmailLogRepository emailLogRepository;
     private final UserEmailService userEmailService;
     private final EmailSenderService emailSenderService;
+    private final TemplateService templateService;
 
     @Override
     public void procesar(NotificacionEmailEvent event) {
 
         log.info("Buscando plantilla con nombre: {}", event.getAsunto());
-        // 1. Resolvemos cual plantilla usar
-         MessageTemplate template = templateRepository
-                .findByTemplateName(event.getAsunto())
-                .orElseThrow(() -> new RuntimeException("Plantilla no encontrado"));
-
 
         // 2. Por cada destinatario
         for (DestinatarioEmail dest : event.getDestinatarios()) {
@@ -61,9 +56,9 @@ public class EmailProcessorServiceImpl implements EmailProcessorService {
             }
 
             try {
-                String html = template.getContent()
-                        .replace("{{rutPagador}}", nombre)
-                        .replace("{{tipoOperacion}}", event.getTipoNotificacion());
+                String html = templateService.build(
+                        event.getAsunto(),
+                        event.getData());
 
 
                 emailSenderService.sendHtmlEmail(email, event.getAsunto(), html);
