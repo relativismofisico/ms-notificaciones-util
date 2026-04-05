@@ -15,7 +15,6 @@ import org.springframework.stereotype.Component;
 public class OtpNotificationConsumer {
 
     private final OtpEmailService otpEmailService;
-    private final OutboxEventRepository outboxEventRepository;
     private final OutboxService outboxService;
 
     @Value("${topics.otp-email-sent}")
@@ -30,6 +29,7 @@ public class OtpNotificationConsumer {
 
         System.out.println("===== EVENTO OTP RECIBIDO =====");
         System.out.println(event);
+        //otpEmailService.sendOtpEmail(event);
         // guardar evento en outbox
         outboxService.guardarEvento(
                 event.getIdNegociacion(),
