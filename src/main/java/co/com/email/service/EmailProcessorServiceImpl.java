@@ -62,11 +62,11 @@ public class EmailProcessorServiceImpl implements EmailProcessorService {
 
 
                 emailSenderService.sendHtmlEmail(email, event.getAsunto(), html);
-                guardarLog(dest.getEmail(), event.getAsunto(), "ENVIADO", null);
+                guardarLog(email, event.getAsunto(), "ENVIADO", null);
                 log.info("✅ Correo enviado a {}", email);
 
             } catch (Exception e) {
-                log.error("Error enviando correo a {}", dest.getEmail(), e);
+                guardarLog(email, event.getAsunto(), "ERROR", e.getMessage());
                 // no rompas todo el proceso por un solo fallo
                 guardarLog(dest.getEmail(), event.getAsunto(), "ERROR", e.getMessage());            }
         }
