@@ -34,7 +34,7 @@ public class EmailProcessorServiceImpl implements EmailProcessorService {
         // 2. Por cada destinatario
         for (DestinatarioEmail dest : event.getDestinatarios()) {
 
-            String email;
+            String email=null;
             String nombre;
 
             if ("EMPRESA".equalsIgnoreCase(dest.getTipoActor())) {
@@ -60,14 +60,34 @@ public class EmailProcessorServiceImpl implements EmailProcessorService {
                         event.getAsunto(),
                         event.getData());
 
+                // 🔥 obtener datos del adjunto
+                String rutaArchivo = (String) event.getData().get("rutaArchivo");
+                String nombreArchivo = (String) event.getData().get("archivo");
 
-                emailSenderService.sendHtmlEmail(email, event.getAsunto(), html);
+                if (rutaArchivo != null) {
+
+                    emailSenderService.sendHtmlEmailWithAttachment(
+                            email,
+                            event.getAsunto(),
+                            html,
+                            rutaArchivo,
+                            nombreArchivo
+                    );
+
+                } else {
+
+                    emailSenderService.sendHtmlEmail(
+                            email,
+                            event.getAsunto(),
+                            html
+                    );
+                }
+
                 guardarLog(email, event.getAsunto(), "ENVIADO", null);
                 log.info("✅ Correo enviado a {}", email);
 
             } catch (Exception e) {
                 guardarLog(email, event.getAsunto(), "ERROR", e.getMessage());
-                // no rompas todo el proceso por un solo fallo
                 guardarLog(dest.getEmail(), event.getAsunto(), "ERROR", e.getMessage());            }
         }
     }

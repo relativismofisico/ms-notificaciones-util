@@ -25,7 +25,8 @@ public class InstruccionPagoEmailMapper {
                         "pagador", event.getPagadorNombre(),
                         "cantidadFacturas", event.getCantidadFacturas(),
                         "totalPagar", event.getTotalPagar(),
-                        "archivo", event.getNombreArchivo()
+                        "archivo", event.getNombreArchivo(),
+                        "rutaArchivo", event.getRutaArchivo()
                 ))
                 .build();
     }
