@@ -25,8 +25,8 @@ public class InstruccionPagoConsumer {
 
         log.info("📥 Evento recibido: {}", event);
 
-        if (event == null || event.getCanalEnvio() == null) {
-            log.warn("Evento inválido o sin canalEnvio");
+        if (event == null || event.getInstruccionId() == null) {
+            log.warn("Evento ignorado - no es InstruccionPagoEvent válido");
             return;
         }
 
