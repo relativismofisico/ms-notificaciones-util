@@ -1,5 +1,6 @@
 package co.com.email.domain.event;
 
+import co.com.email.enums.CanalEnvio;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -27,5 +28,6 @@ public class InstruccionPagoEvent {
     private String rutaArchivo;
 
     private Instant fechaGeneracion;
+    private CanalEnvio canalEnvio;
 }
 

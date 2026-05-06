@@ -2,6 +2,7 @@ package co.com.email.kafka.consumer;
 
 import co.com.email.domain.event.InstruccionPagoEvent;
 import co.com.email.domain.event.NotificacionEmailEvent;
+import co.com.email.service.CanalProcessorFactory;
 import co.com.email.service.EmailProcessorService;
 import co.com.email.util.InstruccionPagoEmailMapper;
 import lombok.RequiredArgsConstructor;
@@ -14,8 +15,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class InstruccionPagoConsumer {
 
-    private final EmailProcessorService emailProcessorService;
-    private final InstruccionPagoEmailMapper mapper;
+    private final CanalProcessorFactory factory;
 
     @KafkaListener(
             topics = "instrucciones-generadas",
@@ -23,10 +23,14 @@ public class InstruccionPagoConsumer {
     )
     public void consumir(InstruccionPagoEvent event) {
 
-        log.info("📥 Evento recibido de Kafka: {}", event.getInstruccionId());
+        log.info("📥 Evento recibido: {}", event);
 
-        NotificacionEmailEvent emailEvent = mapper.toEmailEvent(event);
+        if (event == null || event.getCanalEnvio() == null) {
+            log.warn("Evento inválido o sin canalEnvio");
+            return;
+        }
 
-        emailProcessorService.procesar(emailEvent);
+        factory.get(event.getCanalEnvio().name())
+                .procesar(event);
     }
 }
