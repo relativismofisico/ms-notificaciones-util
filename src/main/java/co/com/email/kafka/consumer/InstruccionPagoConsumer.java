@@ -18,7 +18,7 @@ public class InstruccionPagoConsumer {
     private final CanalProcessorFactory factory;
 
     @KafkaListener(
-            topics = "instrucciones-generadas",
+            topics = "${topics.instrucciones}",
             groupId = "notificaciones-group"
     )
     public void consumir(InstruccionPagoEvent event) {
