@@ -3,6 +3,7 @@ package co.com.email.service;
 import co.com.email.client.NotificaionCorreoSMTPClient;
 import co.com.email.constantes.Constantes;
 import co.com.email.dto.CorreoSMTPRequestDto;
+import co.com.email.exception.EmailValidationException;
 import co.com.email.util.TextosUtil;
 import co.com.email.util.ValidadorUtil;
 import java.util.ArrayList;
@@ -81,7 +82,7 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
 
 		if (totalDestinatarios <= 0) {
 			log.info("No existen destinatarios, destinatariosCC o destinatariosBCC validos");
-			throw new RuntimeException(Constantes.COD_VALIDACION_PARAMETROS_NO_VALIDOS);
+			throw new EmailValidationException("No existen destinatarios válidos en los campos To, Cc o Bcc");
 		}
 
 		if (cantDestinatariosDirectos > this.cantidadLimiteDestinatarios
@@ -116,7 +117,7 @@ public class NotificacionesCorreoServiceImpl implements NotificacionesCorreoServ
 
 		if (!ValidadorUtil.validateEmail(requestDto.getCorreoRemitente())) {
 			log.info("Parámetro correoRemitente not a well-formed email address");
-			throw new RuntimeException(Constantes.COD_VALIDACION_PARAMETROS_NO_VALIDOS);
+			throw new EmailValidationException("El campo correoRemitente no tiene un formato de email válido");
 		}
 
 		if (requestDto.getFirma() == null || requestDto.getFirma().trim().isEmpty()) {
