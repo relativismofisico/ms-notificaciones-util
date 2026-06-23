@@ -1,0 +1,89 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'jacoco'
+    id 'checkstyle'
+    id 'pmd'
+    id 'com.github.spotbugs' version '6.1.7'
+    id 'org.springframework.boot' version '3.5.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = "co.com"
+version = "1.0.0"
+description = "microservicio para el envio de correos y sms"
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    automatedTestImplementation.extendsFrom testImplementation
+            automatedTestRuntimeOnly.extendsFrom testRuntimeOnly
+            architectureTestImplementation.extendsFrom testImplementation
+            architectureTestRuntimeOnly.extendsFrom testRuntimeOnly
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.0.0"
+    }
+}
+
+dependencies {
+    // Spring Boot starters
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    implementation("org.springframework.boot:spring-boot-starter-security")
+    implementation("org.springframework.boot:spring-boot-starter-web")
+    implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
+
+    // Spring Integration SFTP
+    implementation("org.springframework.integration:spring-integration-sftp")
+
+    // Mustache template engine
+    implementation("com.github.spullara.mustache.java:compiler:0.9.10")
+
+    // JSON
+    implementation("com.google.code.gson:gson")
+
+    // Database driver
+    runtimeOnly("com.mysql:mysql-connector-j")
+
+    // OpenAPI / Swagger
+    // ADVERTENCIA: springdoc-openapi-ui 1.x es incompatible con Spring Boot 3.x (usa javax.* en lugar de jakarta.*).
+    // Se recomienda migrar a: implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3")
+    implementation("org.springdoc:springdoc-openapi-ui:1.8.0")
+
+    // Commons utilities
+    implementation("commons-validator:commons-validator:1.9.0")
+    implementation("commons-lang:commons-lang:2.6")
+
+    // SFTP client
+    implementation("com.jcraft:jsch:0.1.55")
+
+    // Lombok
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+
+    // Test
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.kafka:spring-kafka-test")
+    testImplementation("org.springframework.security:spring-security-test")
+}
+
+springBoot {
+    mainClass = 'co.com.MsNotificacionesUtilApplication'
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+apply from: "${rootProject.projectDir}/test.gradle"
+apply from: "${rootProject.projectDir}/coverage.gradle"

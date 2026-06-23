@@ -1,0 +1,66 @@
+/*
+ * Copyright (c). Todos los derechos reservados.
+ */
+
+/**
+ * Clases excluidas del análisis de cobertura JaCoCo.
+ *
+ * Se excluyen:
+ *  - Spring Boot entry-point (sin lógica propia)
+ *  - Domain layer: modelos de datos, eventos, enums e interfaces de repositorio/servicio
+ *    (Lombok genera bytecode sin lógica de negocio: builders, getters, constructores)
+ *  - DTOs y ports: contratos de datos sin lógica
+ *  - Infraestructura gestionada por Spring: config, clientes Feign, adaptadores de repo
+ *    (requieren contexto Spring completo — no son testeables con tests unitarios puros)
+ *  - Web controllers: testeados vía @WebMvcTest, no tests unitarios puros
+ *  - Bytecode obsoleto del paquete operaciones (clases eliminadas del árbol de fuentes)
+ */
+def jacocoExcludes = [
+
+]
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        csv.required = false
+        html.required = true
+        html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+    }
+    afterEvaluate {
+        classDirectories.setFrom(
+                files(classDirectories.files.collect {
+                    fileTree(dir: it, exclude: jacocoExcludes)
+                })
+        )
+    }
+}
+
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
+    afterEvaluate {
+        classDirectories.setFrom(files(classDirectories.files.collect {
+            fileTree(dir: it, exclude: jacocoExcludes)
+        }))
+    }
+    violationRules {
+        rule {
+            enabled = true
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.85
+            }
+        }
+        rule {
+            enabled = true
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+check.dependsOn jacocoTestCoverageVerification
