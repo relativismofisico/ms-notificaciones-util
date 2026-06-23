@@ -1,15 +1,15 @@
 package co.com.email.kafka.consumer;
 
 import co.com.email.domain.event.OtpCreatedEvent;
-import co.com.email.repositories.OutboxEventRepository;
 import co.com.email.service.OtpEmailService;
 import co.com.email.service.OutboxService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OtpNotificationConsumer {
@@ -20,17 +20,12 @@ public class OtpNotificationConsumer {
     @Value("${topics.otp-email-sent}")
     private String otpEmailSentTopic;
 
-
     @KafkaListener(
             topics = "${topics.otp-created}",
             groupId = "notificationsGroup"
     )
     public void consume(OtpCreatedEvent event) {
-
-        System.out.println("===== EVENTO OTP RECIBIDO =====");
-        System.out.println(event);
-        //otpEmailService.sendOtpEmail(event);
-        // guardar evento en outbox
+        log.info("Evento OTP recibido para negociación: {}", event.getIdNegociacion());
         outboxService.guardarEvento(
                 event.getIdNegociacion(),
                 otpEmailSentTopic,

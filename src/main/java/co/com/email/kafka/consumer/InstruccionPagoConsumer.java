@@ -1,10 +1,7 @@
 package co.com.email.kafka.consumer;
 
 import co.com.email.domain.event.InstruccionPagoEvent;
-import co.com.email.domain.event.NotificacionEmailEvent;
 import co.com.email.service.CanalProcessorFactory;
-import co.com.email.service.EmailProcessorService;
-import co.com.email.util.InstruccionPagoEmailMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;

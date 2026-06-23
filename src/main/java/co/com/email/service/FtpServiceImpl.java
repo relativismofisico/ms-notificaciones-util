@@ -5,7 +5,9 @@ import com.jcraft.jsch.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Service
@@ -38,7 +40,15 @@ public class FtpServiceImpl implements FtpService {
                 session.setPassword(config.getContrasenaFtp());
             }
 
-            session.setConfig("StrictHostKeyChecking", "no");
+            if (config.getHostFingerprint() != null && !config.getHostFingerprint().isBlank()) {
+                session.setConfig("StrictHostKeyChecking", "yes");
+                session.setConfig("FingerprintHash", "sha256");
+                jsch.setKnownHosts(new ByteArrayInputStream(
+                        (config.getHost() + " " + config.getHostFingerprint()).getBytes(StandardCharsets.UTF_8)));
+            } else {
+                session.setConfig("StrictHostKeyChecking", "no");
+                log.warn("SFTP host key verification disabled for {}. Configure hostFingerprint to enable it.", config.getHost());
+            }
             session.connect();
 
             Channel channel = session.openChannel("sftp");
