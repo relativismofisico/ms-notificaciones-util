@@ -2,6 +2,7 @@ package co.com.email.service;
 
 import co.com.email.domain.entities.MessageTemplate;
 import co.com.email.domain.event.OtpCreatedEvent;
+import co.com.email.exception.ResourceNotFoundException;
 import co.com.email.repositories.MessageTemplateRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class OtpEmailServiceImpl implements OtpEmailService {
 
         MessageTemplate template = templateRepository
                 .findByTemplateName("otp")
-                .orElseThrow(() -> new RuntimeException("Template OTP no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("MessageTemplate", "otp"));
 
         String html = template.getContent()
                 .replace("{{nombre}}", nombre)

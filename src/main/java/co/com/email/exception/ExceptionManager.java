@@ -1,91 +1,141 @@
 package co.com.email.exception;
 
-import co.com.email.constantes.Constantes;
-import java.nio.charset.StandardCharsets;
-import java.util.Locale;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-import org.springframework.http.HttpHeaders;
+import co.com.email.exception.dto.ApiErrorResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
 
-
+/**
+ * Manejador global de excepciones para el microservicio.
+ *
+ * Convención corporativa de respuestas de error:
+ * - 400 Bad Request      → falla de Bean Validation (@NotNull, @NotEmpty, etc.)
+ * - 404 Not Found        → recurso no existe (ResourceNotFoundException)
+ * - 422 Unprocessable    → la sintaxis es válida pero la semántica de negocio falla
+ * - 500 Internal Error   → error no controlado
+ *
+ * Todos los errores usan ApiErrorResponse como cuerpo de respuesta.
+ */
 @Slf4j
-@ControllerAdvice
-@Order(Ordered.HIGHEST_PRECEDENCE)
+@RestControllerAdvice
 public class ExceptionManager {
-	
-	@Autowired(required = false)
-    private MessageSource messageSource;
 
-    private static final ThreadLocal<Locale> localeTL = new ThreadLocal<>();
+    // ── 400 Bad Request ────────────────────────────────────────────────────────
 
-    /**
-     * Metodo encargado de tratar excepcion MethodArgumentNotValidException. <br>
-     * Retorna siempre un response con el código
-     * Constantes#COD_VALIDACION_PARAMETROS_NO_VALIDOS y mensaje
-     * Constantes#MSG_VALIDACION_PARAMETROS_NO_VALIDOS <br>
-     * Además se incluye el detalle de parámetros de entrada y validaciones no
-     * exitosas
-     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @Order(Ordered.HIGHEST_PRECEDENCE)
-    public ResponseEntity<Object> manageMethodArgumentNotValidException(MethodArgumentNotValidException e) {
-        RequestAttributes requestAttributes = RequestContextHolder.currentRequestAttributes();
-        HttpServletRequest request = ((ServletRequestAttributes) requestAttributes).getRequest();
+    public ResponseEntity<ApiErrorResponse> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpServletRequest request) {
 
-        log.error("Llamada a endpoint [%s] método [%s]: Cuerpo de mensaje posee uno o más campos no válidos", e);
+        List<ApiErrorResponse.FieldError> fieldErrors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(fe -> ApiErrorResponse.FieldError.builder()
+                        .field(fe.getField())
+                        .rejectedValue(fe.getRejectedValue() != null ? fe.getRejectedValue().toString() : null)
+                        .message(fe.getDefaultMessage())
+                        .build())
+                .toList();
 
-        String mensaje;
-        if (messageSource == null) {
-            mensaje = Constantes.MSG_VALIDACION_PARAMETROS_NO_VALIDOS;
-        } else {
-            mensaje = messageSource.getMessage(
-                    "exceptionmanager.methodargumentnotvalid."
-                            .concat(Constantes.COD_VALIDACION_PARAMETROS_NO_VALIDOS).concat(".mensaje"),
-                    null, Constantes.MSG_VALIDACION_PARAMETROS_NO_VALIDOS, getCurrentLocale());
-        }
+        log.warn("[ExceptionManager] 400 Bad Request en [{}] {}: {} campo(s) inválido(s)",
+                request.getMethod(), sanitize(request.getRequestURI()), fieldErrors.size());
 
-        log.error(" Llamada a endpoint [%s] método [%s]: Cuerpo de mensaje posee uno o más campos no válidos",
-                validateLoggerInput(canonicalize(request.getRequestURI())), validateLoggerInput(canonicalize(request.getMethod())));
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .code("VALIDATION_ERROR")
+                .message("Uno o más parámetros no son válidos")
+                .path(request.getRequestURI())
+                .fieldErrors(fieldErrors)
+                .build();
 
-        return new ResponseEntity<>("", new HttpHeaders(), HttpStatus.BAD_REQUEST);
+        return ResponseEntity.badRequest().body(body);
     }
 
+    // ── 404 Not Found ──────────────────────────────────────────────────────────
 
-    private String validateLoggerInput(String texto) {
-        return texto != null ? texto.replaceAll("[^a-zA-Z0-9._+/-]", "") : "";
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleResourceNotFound(
+            ResourceNotFoundException ex,
+            HttpServletRequest request) {
+
+        log.warn("[ExceptionManager] 404 Not Found en [{}] {}: {}",
+                request.getMethod(), sanitize(request.getRequestURI()), ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(buildBody(ex, request));
     }
 
-    private String canonicalize(String prevalidatedStr) {
-        try {
-            if (prevalidatedStr != null) {
-                return new String(prevalidatedStr.getBytes(StandardCharsets.ISO_8859_1), StandardCharsets.UTF_8);
-            }
-        } catch (Exception ignored) {
-        }
-        return null;
+    // ── 422 Unprocessable Entity ───────────────────────────────────────────────
+
+    @ExceptionHandler(EmailValidationException.class)
+    public ResponseEntity<ApiErrorResponse> handleEmailValidation(
+            EmailValidationException ex,
+            HttpServletRequest request) {
+
+        log.warn("[ExceptionManager] 422 Unprocessable Entity en [{}] {}: {}",
+                request.getMethod(), sanitize(request.getRequestURI()), ex.getMessage());
+
+        return ResponseEntity.unprocessableEntity().body(buildBody(ex, request));
     }
 
-    /**
-     * Obtiene el Locale.
-     *
-     * @return Objeto Locale
-     */
-    private static Locale getCurrentLocale() {
-        return localeTL.get();
+    // ── Fallback BaseApiException ──────────────────────────────────────────────
+
+    @ExceptionHandler(BaseApiException.class)
+    public ResponseEntity<ApiErrorResponse> handleBaseApiException(
+            BaseApiException ex,
+            HttpServletRequest request) {
+
+        log.error("[ExceptionManager] {} en [{}] {}: {}",
+                ex.getHttpStatus().value(), request.getMethod(),
+                sanitize(request.getRequestURI()), ex.getMessage());
+
+        return ResponseEntity.status(ex.getHttpStatus()).body(buildBody(ex, request));
     }
 
+    // ── 500 Internal Server Error ──────────────────────────────────────────────
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiErrorResponse> handleGenericException(
+            Exception ex,
+            HttpServletRequest request) {
+
+        log.error("[ExceptionManager] 500 Internal Server Error en [{}] {}",
+                request.getMethod(), sanitize(request.getRequestURI()), ex);
+
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase())
+                .code("INTERNAL_ERROR")
+                .message("Error interno del servidor")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.internalServerError().body(body);
+    }
+
+    // ── Helpers ────────────────────────────────────────────────────────────────
+
+    private ApiErrorResponse buildBody(BaseApiException ex, HttpServletRequest request) {
+        return ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(ex.getHttpStatus().value())
+                .error(ex.getHttpStatus().getReasonPhrase())
+                .code(ex.getCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
+    }
+
+    private String sanitize(String input) {
+        return input != null ? input.replaceAll("[^a-zA-Z0-9._+/\\-]", "") : "";
+    }
 }
