@@ -1,0 +1,9 @@
+security:
+  jwt:
+    secret: ${JWT_SECRET:AF84F1FGllNpNnLG055fdg5hGHJK4KGG5VH5TR5J05JFGGDFDGXVV545J4505G666JFGF2mMY95y}
+  rol:
+    administracion:
+      - ADMINISTRADOR
+      - EMPRESA
+      - OPERARIO
+      - FONDEADOR

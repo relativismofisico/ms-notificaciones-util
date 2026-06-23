@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,6 +49,7 @@ public class NotificacionesCorreoController {
             })
     })
     @PostMapping(value = "/notificarCorreo")
+    @PreAuthorize("@roleEvaluator.hasAccess(authentication, 'administracion')")
     public ResponseEntity<?> enviarCorreoSMTP(@Validated @RequestBody CorreoSMTPRequestDto correoSMTPRequestDto) {
         notificacionesCorreoService.enviarCorreoSMTP(correoSMTPRequestDto);
         return ResponseEntity.noContent().build();
