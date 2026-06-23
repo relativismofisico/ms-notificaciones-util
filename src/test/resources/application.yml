@@ -1,0 +1,24 @@
+security:
+  jwt:
+    secret: dGVzdC1zZWNyZXQta2V5LWZvci11bml0LXRlc3RzLW11c3QtYmUtbG9uZy1lbm91Z2g=
+  rol:
+    administracion:
+      - ADMINISTRADOR
+      - EMPRESA
+
+cantidadLimiteDestinatarios: 10
+
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/test
+
+  mail:
+    host: localhost
+    port: 25
