@@ -1,0 +1,11 @@
+security:
+  jwt:
+    # En producción el secreto DEBE venir de variable de entorno o secret manager.
+    # Nunca hardcodear en este archivo.
+    secret: ${JWT_SECRET}
+  rol:
+    administracion:
+      - ADMINISTRADOR
+      - EMPRESA
+      - OPERARIO
+      - FONDEADOR
