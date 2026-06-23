@@ -5,28 +5,27 @@ import java.util.Base64;
 import java.util.Date;
 import java.util.List;
 
-import co.com.email.dto.CorreoSMTPRequestDto;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.stereotype.Component;
-
 import co.com.email.dto.AdjuntoDto;
+import co.com.email.dto.CorreoSMTPRequestDto;
 import co.com.email.util.TextosUtil;
 import jakarta.mail.Message;
 import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Component;
 
 
 @Slf4j
 @Component
-public class NotificaionCorreoSMTPClientImpl implements NotificaionCorreoSMTPClient{
-	
-	@Autowired
-	private JavaMailSender javaMailSender;
+@RequiredArgsConstructor
+public class NotificaionCorreoSMTPClientImpl implements NotificaionCorreoSMTPClient {
+
+	private final JavaMailSender javaMailSender;
 
 	
 	/**
@@ -52,7 +51,7 @@ public class NotificaionCorreoSMTPClientImpl implements NotificaionCorreoSMTPCli
 					convertListStringToInternetAddressArray(correoSMTPRequestDto.getDestinatariosBcc()));
 
 
-			if (correoSMTPRequestDto.getCuerpoHtml() != null && !correoSMTPRequestDto.getCuerpoHtml().equals("")) {
+			if (correoSMTPRequestDto.getCuerpoHtml() != null && !correoSMTPRequestDto.getCuerpoHtml().isEmpty()) {
 
 				StringBuilder contenidoCorreo = new StringBuilder("<div>").append(correoSMTPRequestDto.getCuerpoTexto())
 						.append("</div>").append("<br/>").append(correoSMTPRequestDto.getCuerpoHtml()).append("<br/>")
@@ -80,7 +79,7 @@ public class NotificaionCorreoSMTPClientImpl implements NotificaionCorreoSMTPCli
 				try {
 					mimeHelper.addAttachment(adjunto.getNombreArchivo(),new ByteArrayResource(Base64.getDecoder().decode(adjunto.getArchivoBase64())));
 				} catch (Exception e) {
-					log.error(("[MessagingException] Error al adjuntar archivo: " + e.getMessage()));
+					log.error("[MessagingException] Error al adjuntar archivo: {}", e.getMessage());
 				}
 			});
 		}

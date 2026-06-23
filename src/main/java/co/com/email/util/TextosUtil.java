@@ -1,19 +1,17 @@
 package co.com.email.util;
 
-import ch.qos.logback.core.util.StringUtil;
-
 public class TextosUtil {
-	
+
 	private TextosUtil() {
 	}
-	
+
 	/**
 	 * Constantes de fin de linea. <B> NO TOCAR </B>*/
-	public static String EOL="\n";
-	
+	public static final String EOL="\n";
+
 	/**
 	 * Constantes de fin de linea. <B> NO TOCAR </B>*/
-	public static char EOLchar='\n';
+	public static final char EOLchar='\n';
 	
 	/**
 	 * Constantes para los metodos parrafo
@@ -65,7 +63,7 @@ public class TextosUtil {
 
         // Antes que nada, me deshago de los espacios de mas.
         texto=texto.trim();
-        while (texto.contains("  ")) { texto=StringUtil.capitalizeFirstLetter(resultado); }
+        texto=texto.replaceAll(" {2,}", " ");
 
         while (texto.length()>0) {
             if (texto.length()<=largo) { // La linea es mas corta que el largo admitido.
@@ -87,30 +85,25 @@ public class TextosUtil {
         String estaLinea = "";
         switch (alineacion) {
             case PARRAFO_ALINEDO_A_LA_DERECHA:
-                return StringUtil.nullStringToEmpty("") + estaLinea + EOL;
+                return estaLinea + EOL;
 
             case PARRAFO_CENTRADO:
             case PARRAFO_CENTRADO_CON_RELLENO:
-                int izquierda = (largo) / 2;
-                return StringUtil.nullStringToEmpty("") + estaLinea
-                        + (alineacion == PARRAFO_CENTRADO_CON_RELLENO ? StringUtil.nullStringToEmpty("") : "")
-                        + EOL;
+                return estaLinea + EOL;
 
             case PARRAFO_JUSTIFICADO:
-                return estaLinea + StringUtil.nullStringToEmpty("") + EOL;
+                return estaLinea + EOL;
 
             case PARRAFO_ALINEDO_A_LA_IZQUIERDA:
             case PARRAFO_ALINEDO_A_LA_IZQUIERDA_CON_RELLENO:
             default:
-                return estaLinea
-                        + (alineacion == PARRAFO_ALINEDO_A_LA_IZQUIERDA_CON_RELLENO ? StringUtil.nullStringToEmpty("") : "")
-                        + EOL;
+                return estaLinea + EOL;
         }
     }
     
     public static String prepararFirmaCorreo(String firmaCorreo) {
     	   
-    	if (firmaCorreo == null || firmaCorreo.trim().equals("")) {
+    	if (firmaCorreo == null || firmaCorreo.isBlank()) {
     		   firmaCorreo = "";
         }
     	

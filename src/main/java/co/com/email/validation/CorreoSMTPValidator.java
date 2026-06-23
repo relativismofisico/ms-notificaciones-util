@@ -31,7 +31,7 @@ public class CorreoSMTPValidator {
             throw new EmailValidationException("El campo correoRemitente no tiene un formato de email válido");
         }
 
-        if (requestDto.getFirma() == null || requestDto.getFirma().trim().isEmpty()) {
+        if (requestDto.getFirma() == null || requestDto.getFirma().isBlank()) {
             log.warn("[CorreoSMTPValidator][validar] La firma es nula o vacía");
         }
 

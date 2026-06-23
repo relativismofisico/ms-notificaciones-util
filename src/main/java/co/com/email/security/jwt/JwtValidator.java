@@ -5,7 +5,6 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -22,21 +21,20 @@ import javax.crypto.SecretKey;
  * ExpiredJwtException y JwtException se propagan al JwtAuthFilter.
  */
 @Component
-@RequiredArgsConstructor
 public class JwtValidator {
 
-    private final SecurityProperties securityProperties;
+    private final SecretKey signKey;
+
+    public JwtValidator(SecurityProperties securityProperties) {
+        byte[] keyBytes = Decoders.BASE64.decode(securityProperties.getJwt().getSecret());
+        this.signKey = Keys.hmacShaKeyFor(keyBytes);
+    }
 
     public Claims validateAndExtract(String token) {
         return Jwts.parser()
-                .verifyWith(buildSignKey())
+                .verifyWith(signKey)
                 .build()
                 .parseSignedClaims(token)
                 .getPayload();
-    }
-
-    private SecretKey buildSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(securityProperties.getJwt().getSecret());
-        return Keys.hmacShaKeyFor(keyBytes);
     }
 }

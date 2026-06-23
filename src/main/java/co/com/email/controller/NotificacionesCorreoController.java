@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.servers.Server;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -33,10 +33,10 @@ import org.springframework.web.bind.annotation.RestController;
 )
 
 @RestController
+@RequiredArgsConstructor
 public class NotificacionesCorreoController {
 
-    @Autowired
-    private NotificacionesCorreoService notificacionesCorreoService;
+    private final NotificacionesCorreoService notificacionesCorreoService;
 
     /**
      * Servicio de notificacion correo

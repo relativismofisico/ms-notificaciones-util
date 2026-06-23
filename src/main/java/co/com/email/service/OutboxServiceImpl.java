@@ -4,9 +4,12 @@ import co.com.email.domain.entities.OutboxEventEntity;
 import co.com.email.repositories.OutboxEventRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class OutboxServiceImpl implements OutboxService {
@@ -30,7 +33,7 @@ public class OutboxServiceImpl implements OutboxService {
             event.setIntentos(0);
 
             outboxEventRepository.save(event);
-            System.out.println("Evento guardado en OUTBOX -> TOPIC: " + tipoEvento);
+            log.info("Evento guardado en OUTBOX -> TOPIC: {}", tipoEvento);
 
 
         } catch (Exception e) {
