@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class  OtpCreatedEvent {
+public class OtpCreatedEvent {
 
     private String idNegociacion;
     private String rutEmpresa;
@@ -19,5 +19,4 @@ public class  OtpCreatedEvent {
 
     private String otp;
     private LocalDateTime fechaExpiracion;
-
 }

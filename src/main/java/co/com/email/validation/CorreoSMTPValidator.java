@@ -83,15 +83,15 @@ public class CorreoSMTPValidator {
             String destinatariosCc = requestDto.getDestinatariosCc() != null ? requestDto.getDestinatariosCc().toString() : "";
             String destinatariosBcc = requestDto.getDestinatariosBcc() != null ? requestDto.getDestinatariosBcc().toString() : "";
 
-            StringBuilder msgWarn = new StringBuilder(
-                    "[Warning Mail] - [ Cantidad límite de destinatarios en los campos To:, Cc: y Bcc excede el limite recomendado. [");
-            msgWarn.append(" \n nombreRemitente: ").append(requestDto.getNombreRemitente())
+            StringBuilder msgWarn = new StringBuilder(512);
+            msgWarn.append("[Warning Mail] - [ Cantidad límite en To:, Cc: y Bcc excede el limite. [ \n nombreRemitente: ")
+                    .append(requestDto.getNombreRemitente())
                     .append(" \n mailRemitente: ").append(requestDto.getCorreoRemitente())
                     .append(" \n Asunto: ").append(requestDto.getAsunto())
                     .append(" \n Destinatarios: ").append(destinatarios)
                     .append(" \n Destinatarios CC: ").append(destinatariosCc)
                     .append(" \n Destinatarios BCC: ").append(destinatariosBcc)
-                    .append(" \n cuerpoTexto: ").append(requestDto.getCuerpoTexto()).append("]");
+                    .append(" \n cuerpoTexto: ").append(requestDto.getCuerpoTexto()).append(']');
 
             log.warn("[CorreoSMTPValidator][validarCantidadDestinatarios] metodo ejecutado con advertencia: {}", msgWarn);
         }

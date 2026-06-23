@@ -32,11 +32,7 @@ public class RoleEvaluator {
     public boolean hasAccess(Authentication authentication, String group) {
         List<String> allowedRoles = securityProperties.getRolesForGroup(group);
 
-        if (allowedRoles.isEmpty()) {
-            return false;
-        }
-
-        return authentication.getAuthorities().stream()
+        return !allowedRoles.isEmpty() && authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(allowedRoles::contains);
     }

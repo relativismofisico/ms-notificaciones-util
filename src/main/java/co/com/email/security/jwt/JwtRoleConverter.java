@@ -15,9 +15,10 @@ import java.util.List;
  *
  * El claim "rol" en ms-security es un String simple: "ADMINISTRADOR", "EMPRESA", etc.
  */
-public class JwtRoleConverter {
+public final class JwtRoleConverter {
 
-    private JwtRoleConverter() {}
+    private JwtRoleConverter() {
+    }
 
     public static Collection<GrantedAuthority> convert(String rolClaim) {
         if (rolClaim == null || rolClaim.isBlank()) {

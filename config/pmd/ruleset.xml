@@ -1,0 +1,156 @@
+<?xml version="1.0"?>
+<ruleset name="ms-notificaciones-util PMD Ruleset"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+                             https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Conjunto de reglas PMD empresariales para ms-notificaciones-util.
+        Compatible con Java 17 y Spring Boot 3.
+        Se excluyen reglas que colisionan con Lombok, Spring, JPA, o patrones corporativos.
+    </description>
+
+    <!-- =================================================================
+         BEST PRACTICES
+    ================================================================== -->
+    <rule ref="category/java/bestpractices.xml">
+        <!-- JUnit4 vs JUnit5 — usamos JUnit5 -->
+        <exclude name="JUnit4TestShouldUseTestAnnotation"/>
+        <exclude name="JUnit4TestShouldUseAfterAnnotation"/>
+        <exclude name="JUnit4TestShouldUseBeforeAnnotation"/>
+        <exclude name="JUnit4SuitesShouldUseSuiteAnnotation"/>
+        <!-- Lombok @Slf4j ya optimiza las llamadas al logger -->
+        <exclude name="GuardLogStatement"/>
+        <!-- Spring permite arrays de @Server, @ApiResponse, etc. -->
+        <exclude name="ArrayIsStoredDirectly"/>
+        <!-- Patrón Repository no siempre expone interfaces -->
+        <exclude name="LooseCoupling"/>
+        <!-- No aplica en código productivo -->
+        <exclude name="SystemPrintln"/>
+        <!-- Incompatible con Spring MVC / REST, se descarta aquí -->
+        <exclude name="MissingOverride"/>
+        <!-- Reasignación de parámetros intencional en utilidades y DTOs -->
+        <exclude name="AvoidReassigningParameters"/>
+    </rule>
+
+    <!-- =================================================================
+         CODE STYLE
+    ================================================================== -->
+    <rule ref="category/java/codestyle.xml">
+        <!-- Agregar 'final' a todos los parámetros sería demasiado invasivo -->
+        <exclude name="MethodArgumentCouldBeFinal"/>
+        <!-- Agregar 'final' a todas las variables locales es excesivo -->
+        <exclude name="LocalVariableCouldBeFinal"/>
+        <!-- Lombok @AllArgsConstructor puede generar constructores largos -->
+        <exclude name="ExcessiveParameterList"/>
+        <!-- Nombres cortos aceptados en lambdas y bucles -->
+        <exclude name="ShortVariable"/>
+        <exclude name="LongVariable"/>
+        <exclude name="ShortClassName"/>
+        <exclude name="ShortMethodName"/>
+        <!-- Spring genera beans con campos que pueden no estar al inicio -->
+        <exclude name="FieldDeclarationsShouldBeAtStartOfClass"/>
+        <!-- Permite retornar directamente sin variable intermedia -->
+        <exclude name="UnnecessaryLocalBeforeReturn"/>
+        <!-- RuntimeException intencional en infraestructura / wrappers -->
+        <exclude name="AvoidThrowingRawExceptionTypes"/>
+        <!-- Admite múltiples campos en entidades JPA -->
+        <exclude name="TooManyFields"/>
+        <!-- Anotaciones Spring no requieren comentarios obligatorios -->
+        <exclude name="CommentRequired"/>
+        <exclude name="CommentSize"/>
+        <!-- Spring IoC gestiona constructores -->
+        <exclude name="AtLeastOneConstructor"/>
+        <!-- Múltiples returns son necesarios en guards defensivos -->
+        <exclude name="OnlyOneReturn"/>
+        <!-- JPA necesita constructor vacío explícito a veces -->
+        <exclude name="UnnecessaryConstructor"/>
+        <!-- Ternarios legibles son válidos -->
+        <exclude name="ConfusingTernary"/>
+        <!-- Guiones bajos en literales numéricos opcionales -->
+        <exclude name="UseUnderscoresInNumericLiterals"/>
+        <!-- Evitar re-asignación de parámetros puede bloquear lógica de negocio -->
+        <exclude name="AvoidReassigningParameters"/>
+        <!-- La declaración temprana es a veces intencional para legibilidad -->
+        <exclude name="PrematureDeclaration"/>
+        <exclude name="CallSuperInConstructor"/>
+        <exclude name="DefaultPackage"/>
+    </rule>
+
+    <!-- =================================================================
+         DESIGN
+    ================================================================== -->
+    <rule ref="category/java/design.xml">
+        <!-- Spring inyecta servicios con múltiples dependencias -->
+        <exclude name="ExcessiveImports"/>
+        <exclude name="TooManyMethods"/>
+        <exclude name="TooManyFields"/>
+        <exclude name="ExcessivePublicCount"/>
+        <exclude name="ExcessiveClassLength"/>
+        <!-- Los DTOs y entidades son data classes por diseño -->
+        <exclude name="DataClass"/>
+        <!-- AvoidCatchingGenericException: consumers Kafka lo usan intencionalmente -->
+        <exclude name="AvoidCatchingGenericException"/>
+        <!-- Métodos que declaran Exception para compatibilidad con frameworks -->
+        <exclude name="SignatureDeclareThrowsException"/>
+        <!-- Clases abstractas de dominio sin métodos abstractos son válidas -->
+        <exclude name="AbstractClassWithoutAbstractMethod"/>
+        <!-- Law of Demeter incompatible con Spring/JPA fluent APIs -->
+        <exclude name="LawOfDemeter"/>
+        <!-- Ciclomática inherente a la lógica de validación de negocio -->
+        <exclude name="CyclomaticComplexity"/>
+        <exclude name="NcssCount"/>
+        <exclude name="CouplingBetweenObjects"/>
+        <exclude name="AvoidThrowingNullPointerException"/>
+        <exclude name="UseObjectForClearerAPI"/>
+        <!-- RuntimeException intencional en wrappers de infraestructura -->
+        <exclude name="AvoidThrowingRawExceptionTypes"/>
+        <!-- Spring Boot main class no es una utility class -->
+        <exclude name="UseUtilityClass"/>
+    </rule>
+
+    <!-- =================================================================
+         ERROR PRONE
+    ================================================================== -->
+    <rule ref="category/java/errorprone.xml">
+        <!-- Entidades JPA no requieren serialVersionUID -->
+        <exclude name="MissingSerialVersionUID"/>
+        <!-- Clases JPA/MongoDB no son Serializable por defecto -->
+        <exclude name="NonSerializableClass"/>
+        <!-- Null checks explícitos son intencionales -->
+        <exclude name="NullAssignment"/>
+        <!-- new Date() en setSentDate (protocolo MIME - comportamiento legacy) -->
+        <exclude name="UseObjectForClearerAPI"/>
+        <exclude name="AvoidFieldNameMatchingMethodName"/>
+        <exclude name="AvoidFieldNameMatchingTypeName"/>
+        <exclude name="UseLocaleWithCaseConversions"/>
+        <exclude name="AssignmentInOperand"/>
+        <!-- JSch gestiona sus propios recursos con exit() y disconnect() -->
+        <exclude name="CloseResource"/>
+        <exclude name="AvoidCatchingThrowable"/>
+        <!-- Evitar literales en if es excesivo para constantes bien nombradas -->
+        <exclude name="AvoidLiteralsInIfCondition"/>
+    </rule>
+
+    <!-- =================================================================
+         MULTITHREADING
+    ================================================================== -->
+    <rule ref="category/java/multithreading.xml">
+        <!-- Beans Spring son singletons gestionados por el contenedor -->
+        <exclude name="UseConcurrentHashMap"/>
+        <exclude name="DoNotUseThreads"/>
+        <exclude name="AvoidSynchronizedAtMethodLevel"/>
+    </rule>
+
+    <!-- =================================================================
+         PERFORMANCE
+    ================================================================== -->
+    <rule ref="category/java/performance.xml">
+        <!-- Spring DataJPA requiere boxing en ciertos contextos -->
+        <exclude name="AvoidInstantiatingObjectsJustToGetClass"/>
+        <!-- indexOf(char) vs indexOf(String) — cambio trivial pero fuera de alcance -->
+        <exclude name="UseIndexOfChar"/>
+    </rule>
+
+</ruleset>

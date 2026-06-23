@@ -51,7 +51,7 @@ tasks.register('architectureTest', Test) {
     testClassesDirs = sourceSets.architectureTest.output.classesDirs
     classpath = sourceSets.architectureTest.runtimeClasspath
 }
-
+*/
 checkstyle {
     final String checkstyleConfigFile = System.getenv('CHECKSTYLE_CONFIG_FILE') != null
             ? System.getenv('CHECKSTYLE_CONFIG_FILE')
@@ -85,20 +85,4 @@ spotbugsMain {
         html.required = true
     }
 }
-
-// Configuraciones de architectureTest (automatedTest ya está en build.gradle)
-configurations {
-	architectureTestImplementation.extendsFrom testImplementation
-	architectureTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
-
-dependencies {
-    testImplementation localGroovy()
-
-    // Karate dependencies ya están en build.gradle
-
-    architectureTestImplementation 'com.tngtech.archunit:archunit:1.3.0'
-    architectureTestImplementation 'org.junit.jupiter:junit-jupiter:5.11.4'
-}
-*/
 

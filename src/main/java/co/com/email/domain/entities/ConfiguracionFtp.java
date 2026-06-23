@@ -1,6 +1,11 @@
 package co.com.email.domain.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -31,9 +36,9 @@ public class ConfiguracionFtp {
     @Column(nullable = false)
     private String usuarioFtp;
 
-    private String contrasenaFtp;           // solo si authType = PASSWORD
-    private String privateKeyPath;     // solo si authType = PRIVATE_KEY
-    private String passphrase;         // opcional para clave privada
+    private String contrasenaFtp;
+    private String privateKeyPath;
+    private String passphrase;
 
     @Column(nullable = false)
     private String remoteDir;
@@ -45,7 +50,7 @@ public class ConfiguracionFtp {
     private String rutaErrores;
 
     @Column(nullable = false)
-    private String tipoDeAutenticacion; // "PASSWORD" o "PRIVATE_KEY"
+    private String tipoDeAutenticacion;
 
     @Column(name = "usuario_aplicacion")
     private String usuarioAplicacion;
