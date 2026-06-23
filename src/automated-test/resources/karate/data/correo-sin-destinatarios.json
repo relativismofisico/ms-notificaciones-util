@@ -1,0 +1,5 @@
+{
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test sin destinatarios",
+  "cuerpoTexto": "Cuerpo de prueba"
+}

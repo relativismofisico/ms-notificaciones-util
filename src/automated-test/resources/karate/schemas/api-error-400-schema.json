@@ -1,0 +1,9 @@
+{
+  "timestamp": "#string",
+  "status": 400,
+  "error": "Bad Request",
+  "code": "VALIDATION_ERROR",
+  "message": "#string",
+  "path": "#string",
+  "fieldErrors": "#[] #object"
+}

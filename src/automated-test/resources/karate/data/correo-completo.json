@@ -1,0 +1,18 @@
+{
+  "nombreRemitente": "QA Automatizado",
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test Funcional Karate - Completo",
+  "destinatarios": ["qa-to1@empresa.com", "qa-to2@empresa.com"],
+  "destinatariosCc": ["qa-cc@empresa.com"],
+  "destinatariosBcc": ["qa-bcc@empresa.com"],
+  "cuerpoTexto": "Cuerpo en texto plano del correo de prueba.",
+  "cuerpoHtml": "<html><body><h1>Test QA</h1><p>Correo de prueba funcional.</p></body></html>",
+  "firma": "Equipo QA",
+  "adjuntos": [
+    {
+      "nombreArchivo": "documento-prueba",
+      "extension": "pdf",
+      "archivoBase64": "JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwo+PgplbmRvYmoK"
+    }
+  ]
+}

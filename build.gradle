@@ -17,11 +17,6 @@ repositories {
     mavenCentral()
 }
 
-configurations {
-    automatedTestImplementation.extendsFrom testImplementation
-    automatedTestRuntimeOnly.extendsFrom testRuntimeOnly
-}
-
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:2025.0.0"
@@ -53,9 +48,10 @@ dependencies {
     runtimeOnly("com.mysql:mysql-connector-j")
 
     // OpenAPI / Swagger
-    // ADVERTENCIA: springdoc-openapi-ui 1.x es incompatible con Spring Boot 3.x (usa javax.* en lugar de jakarta.*).
-    // Se recomienda migrar a: implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3")
-    implementation("org.springdoc:springdoc-openapi-ui:1.8.0")
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.3")
+
+    // Bean Validation (Hibernate Validator)
+    implementation("org.springframework.boot:spring-boot-starter-validation")
 
     // JWT (mismo proveedor que ms-security)
     implementation("io.jsonwebtoken:jjwt-api:0.12.6")
@@ -82,6 +78,7 @@ dependencies {
     testImplementation("org.spockframework:spock-core:2.4-groovy-4.0")
     testImplementation("org.spockframework:spock-spring:2.4-groovy-4.0")
     testImplementation("org.apache.groovy:groovy:4.0.22")
+
 
 }
 

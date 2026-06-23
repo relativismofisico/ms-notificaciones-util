@@ -1,0 +1,8 @@
+{
+  "timestamp": "#string",
+  "status": 422,
+  "error": "Unprocessable Entity",
+  "code": "EMAIL_VALIDATION_ERROR",
+  "message": "#string",
+  "path": "#string"
+}

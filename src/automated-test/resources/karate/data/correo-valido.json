@@ -1,0 +1,8 @@
+{
+  "nombreRemitente": "QA Automatizado",
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test Funcional Karate - Smoke",
+  "destinatarios": ["qa-destinatario@empresa.com"],
+  "cuerpoTexto": "Este correo fue generado por la suite de pruebas funcionales Karate.",
+  "firma": "Equipo QA - ms-notificaciones-util"
+}
