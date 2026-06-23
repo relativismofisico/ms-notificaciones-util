@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class NotificaionCorreoSMTPClientImpl implements NotificaionCorreoSMTPClient {
+public class NotificaionCorreoSMTPClientImpl implements co.com.email.service.NotificaionCorreoSMTPClient {
 
     private final JavaMailSender javaMailSender;
 

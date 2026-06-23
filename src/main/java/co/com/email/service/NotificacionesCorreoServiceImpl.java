@@ -1,6 +1,5 @@
 package co.com.email.service;
 
-import co.com.email.client.NotificaionCorreoSMTPClient;
 import co.com.email.dto.CorreoSMTPRequestDto;
 import co.com.email.util.TextosUtil;
 import co.com.email.validation.CorreoSMTPValidator;

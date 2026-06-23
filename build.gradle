@@ -19,9 +19,7 @@ repositories {
 
 configurations {
     automatedTestImplementation.extendsFrom testImplementation
-            automatedTestRuntimeOnly.extendsFrom testRuntimeOnly
-            architectureTestImplementation.extendsFrom testImplementation
-            architectureTestRuntimeOnly.extendsFrom testRuntimeOnly
+    automatedTestRuntimeOnly.extendsFrom testRuntimeOnly
 }
 
 dependencyManagement {
@@ -79,6 +77,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.kafka:spring-kafka-test")
     testImplementation("org.springframework.security:spring-security-test")
+
 }
 
 springBoot {
