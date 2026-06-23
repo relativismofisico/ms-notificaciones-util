@@ -1,0 +1,5 @@
+{
+  "correoRemitente": "qa-auto@empresa.com",
+  "destinatarios": ["qa-destinatario@empresa.com"],
+  "cuerpoTexto": "Cuerpo de prueba"
+}

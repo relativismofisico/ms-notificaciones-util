@@ -1,0 +1,5 @@
+{
+  "asunto": "Test sin correoRemitente",
+  "destinatarios": ["qa-destinatario@empresa.com"],
+  "cuerpoTexto": "Cuerpo de prueba"
+}

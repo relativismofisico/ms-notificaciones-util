@@ -1,0 +1,8 @@
+{
+  "timestamp": "#string",
+  "status": 403,
+  "error": "Forbidden",
+  "code": "#string",
+  "message": "#string",
+  "path": "#string"
+}

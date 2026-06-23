@@ -5,6 +5,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -58,6 +60,49 @@ public class ExceptionManager {
                 .build();
 
         return ResponseEntity.badRequest().body(body);
+    }
+
+    // ── 400 Bad Request (cuerpo ilegible o tipo incorrecto) ──────────────────
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+
+        log.warn("[ExceptionManager] 400 Bad Request (mensaje no legible) en [{}] {}: {}",
+                request.getMethod(), sanitize(request.getRequestURI()), ex.getMessage());
+
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(HttpStatus.BAD_REQUEST.getReasonPhrase())
+                .code("VALIDATION_ERROR")
+                .message("El cuerpo de la solicitud no es válido o está mal formado")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    // ── 403 Forbidden (autorización por @PreAuthorize) ─────────────────────
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(
+            AccessDeniedException ex,
+            HttpServletRequest request) {
+
+        log.warn("[ExceptionManager] 403 Forbidden en [{}] {}", request.getMethod(), sanitize(request.getRequestURI()));
+
+        ApiErrorResponse body = ApiErrorResponse.builder()
+                .timestamp(LocalDateTime.now())
+                .status(HttpStatus.FORBIDDEN.value())
+                .error(HttpStatus.FORBIDDEN.getReasonPhrase())
+                .code("FORBIDDEN")
+                .message("No tiene permisos para acceder a este recurso.")
+                .path(request.getRequestURI())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     // ── 404 Not Found ──────────────────────────────────────────────────────────
