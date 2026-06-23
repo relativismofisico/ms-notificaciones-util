@@ -1,87 +1,95 @@
 package co.com.email.util;
 
-public class TextosUtil {
+public final class TextosUtil {
 
-	private TextosUtil() {
-	}
+    private TextosUtil() {
+    }
 
-	/**
-	 * Constantes de fin de linea. <B> NO TOCAR </B>*/
-	public static final String EOL="\n";
-
-	/**
-	 * Constantes de fin de linea. <B> NO TOCAR </B>*/
-	public static final char EOLchar='\n';
-	
-	/**
-	 * Constantes para los metodos parrafo
-	 * Indica que se debe alinear el texto por la izquierda. <B> NO TOCAR </B>*/
-	public static final char PARRAFO_ALINEDO_A_LA_IZQUIERDA='I';
-	
-	/**
-	 * Constantes para los metodos parrafo
-	 * Indica que se debe alinear el texto por la izquierda y rellenar. <B> NO TOCAR </B>*/
-	public static final char PARRAFO_ALINEDO_A_LA_IZQUIERDA_CON_RELLENO='Y';
-	
-	/**
-	 * Constantes para los metodos parrafo
-	 * Indica que se debe alinear el texto por la derecha. <B> NO TOCAR </B>*/
-	public static final char PARRAFO_ALINEDO_A_LA_DERECHA='D';
-	
-	/**
-	 * Constantes para los metodos parrafo
-	 * Indica que se debe alinear al centro. <B> NO TOCAR </B>*/
-	public static final char PARRAFO_CENTRADO='C';
-	
-	/**
-	 * Constantes para los metodos parrafo
-	 * Indica que se debe alinear al centro y con relleno. <B> NO TOCAR </B>*/
-	public static final char PARRAFO_CENTRADO_CON_RELLENO='Z';
-	
-	/**
-	 * Constantes para los metodos parrafo
-	 * Indica que se debe justificar. <B> NO TOCAR </B>*/
-	public static final char PARRAFO_JUSTIFICADO='J';
-	
-	/**
-     * Constante que determina la cantidad de caracteres por linea que debe
-     * tener un texto formateado para e-mail. Las reglas de
-     * <EM>netiquette</EM> dicen que este valor debe ser 72.
-     */
-    public static final int ANCHO_DE_LINEA_EN_EMAIL=72; /* PROHIBIDO CAMBIAR ESTE VALOR */
-	
     /**
-     * Recibe un string (de texto) y lo convierte en un string multilinea
+     * Constante de fin de linea.
+     */
+    public static final String EOL = "\n";
+
+    /**
+     * Constante de fin de linea (char).
+     */
+    public static final char EOL_CHAR = '\n';
+
+    /**
+     * Indica que se debe alinear el texto por la izquierda.
+     */
+    public static final char PARRAFO_ALINEDO_A_LA_IZQUIERDA = 'I';
+
+    /**
+     * Indica que se debe alinear el texto por la izquierda y rellenar.
+     */
+    public static final char PARRAFO_ALINEDO_A_LA_IZQUIERDA_CON_RELLENO = 'Y';
+
+    /**
+     * Indica que se debe alinear el texto por la derecha.
+     */
+    public static final char PARRAFO_ALINEDO_A_LA_DERECHA = 'D';
+
+    /**
+     * Indica que se debe alinear al centro.
+     */
+    public static final char PARRAFO_CENTRADO = 'C';
+
+    /**
+     * Indica que se debe alinear al centro y con relleno.
+     */
+    public static final char PARRAFO_CENTRADO_CON_RELLENO = 'Z';
+
+    /**
+     * Indica que se debe justificar.
+     */
+    public static final char PARRAFO_JUSTIFICADO = 'J';
+
+    /**
+     * Cantidad de caracteres por linea para texto formateado en e-mail.
+     * Las reglas de netiquette dicen que este valor debe ser 72.
+     */
+    public static final int ANCHO_DE_LINEA_EN_EMAIL = 72;
+
+    /**
+     * Recibe un string (de texto) y lo convierte en un string multilinea.
      *
+     * @param texto     el texto a formatear
+     * @param largo     largo maximo de linea
+     * @param alineacion tipo de alineacion a aplicar
+     * @return texto formateado en multiples lineas
      */
     public static String parrafo(String texto, int largo, char alineacion) {
-        String resultado="";
+        String resultado = "";
         int ultimoEspacio;
 
-        if (texto==null) texto="";
-        if (largo<=0) return texto;
+        if (texto == null) {
+            texto = "";
+        }
+        if (largo <= 0) {
+            return texto;
+        }
 
-        // Antes que nada, me deshago de los espacios de mas.
-        texto=texto.trim();
-        texto=texto.replaceAll(" {2,}", " ");
+        texto = texto.trim();
+        texto = texto.replaceAll(" {2,}", " ");
 
-        while (texto.length()>0) {
-            if (texto.length()<=largo) { // La linea es mas corta que el largo admitido.
-                texto="";
-            } else { // Es de igual tamanio o mas larga.
-                ultimoEspacio=texto.lastIndexOf(" ", largo);
-                if (ultimoEspacio<0) { // Una palabra demasiado larga - la cortamos.
-                    texto=texto.substring(largo, texto.length());
-                } else { // Caso normal.
-                    texto=texto.substring(ultimoEspacio+1);
+        while (texto.length() > 0) {
+            if (texto.length() <= largo) {
+                texto = "";
+            } else {
+                ultimoEspacio = texto.lastIndexOf(" ", largo);
+                if (ultimoEspacio < 0) {
+                    texto = texto.substring(largo, texto.length());
+                } else {
+                    texto = texto.substring(ultimoEspacio + 1);
                 }
             }
-            resultado = foo(alineacion, largo);
+            resultado = foo(alineacion);
         }
         return resultado;
     }
 
-    private static String foo(char alineacion, int largo) {
+    private static String foo(char alineacion) {
         String estaLinea = "";
         switch (alineacion) {
             case PARRAFO_ALINEDO_A_LA_DERECHA:
@@ -100,44 +108,47 @@ public class TextosUtil {
                 return estaLinea + EOL;
         }
     }
-    
+
+    /**
+     * Prepara la firma para incluirse en el cuerpo del correo.
+     *
+     * @param firmaCorreo texto de la firma
+     * @return firma formateada
+     */
     public static String prepararFirmaCorreo(String firmaCorreo) {
-    	   
-    	if (firmaCorreo == null || firmaCorreo.isBlank()) {
-    		   firmaCorreo = "";
+
+        if (firmaCorreo == null || firmaCorreo.isBlank()) {
+            firmaCorreo = "";
         }
-    	
-    	if (firmaCorreo.length() > 0
-           		&& firmaCorreo.substring(firmaCorreo.length()-1).equals(EOL)) {
-        	   
-    		firmaCorreo = firmaCorreo.substring(0, firmaCorreo.length() - 1);
-    	}
-       
-       if (firmaCorreo.indexOf(EOLchar) == -1) {
-    	   firmaCorreo = parrafo(firmaCorreo, ANCHO_DE_LINEA_EN_EMAIL, PARRAFO_ALINEDO_A_LA_IZQUIERDA);
-       } else {
-    	   firmaCorreo += EOL;
-       }
-       
-       return firmaCorreo;
+
+        if (firmaCorreo.length() > 0
+                && EOL.equals(firmaCorreo.substring(firmaCorreo.length() - 1))) {
+            firmaCorreo = firmaCorreo.substring(0, firmaCorreo.length() - 1);
+        }
+
+        if (firmaCorreo.indexOf(EOL_CHAR) == -1) {
+            firmaCorreo = parrafo(firmaCorreo, ANCHO_DE_LINEA_EN_EMAIL, PARRAFO_ALINEDO_A_LA_IZQUIERDA);
+        } else {
+            firmaCorreo += EOL;
+        }
+
+        return firmaCorreo;
     }
 
     /**
-     * Para dicho metodo, debió pasar previamente el metodo de verificación de no nulos.
+     * Prepara el cuerpo del correo concatenando contenido y firma.
+     * Debe haber pasado previamente el metodo de verificacion de no nulos.
      *
-     * @param contenido the contenido
-     * @param firma     the firma
-     * @return the string
+     * @param contenido el contenido del correo
+     * @param firma     la firma del correo
+     * @return el cuerpo completo del correo
      */
     public static String prepararCuerpoMail(String contenido, String firma) {
 
         contenido = contenido == null ? "" : contenido;
         firma = firma == null ? "" : firma;
 
-        return contenido.concat(firma.equals("")? "" : TextosUtil.EOL.concat("-- ").concat(TextosUtil.EOL).concat(firma));
+        return contenido.concat(
+                "".equals(firma) ? "" : EOL.concat("-- ").concat(EOL).concat(firma));
     }
-	
-	
-	
-
 }

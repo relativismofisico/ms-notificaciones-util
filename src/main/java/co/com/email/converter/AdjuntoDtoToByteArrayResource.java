@@ -6,7 +6,7 @@ import org.springframework.core.io.ByteArrayResource;
 import co.com.email.dto.AdjuntoDto;
 import java.util.Base64;
 
-public class AdjuntoDtoToByteArrayResource implements Converter<AdjuntoDto, ByteArrayResource>{
+public class AdjuntoDtoToByteArrayResource implements Converter<AdjuntoDto, ByteArrayResource> {
 
 	@Override
 	public ByteArrayResource convert(AdjuntoDto source) {

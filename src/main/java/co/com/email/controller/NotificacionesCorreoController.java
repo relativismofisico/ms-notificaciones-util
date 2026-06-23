@@ -43,12 +43,12 @@ public class NotificacionesCorreoController {
      */
 
     @Operation(summary = "Operacion que permite el envio de correos SMTP ")
-    @ApiResponses(value = {
+    @ApiResponses({
             @ApiResponse(responseCode = "204", description = "No Content", headers = {
                     @Header(name = HttpHeaders.CONTENT_TYPE, description = "Content Type Header", schema = @Schema(implementation = String.class))
             })
     })
-    @PostMapping(value = "/notificarCorreo")
+    @PostMapping("/notificarCorreo")
     @PreAuthorize("@roleEvaluator.hasAccess(authentication, 'administracion')")
     public ResponseEntity<?> enviarCorreoSMTP(@Validated @RequestBody CorreoSMTPRequestDto correoSMTPRequestDto) {
         notificacionesCorreoService.enviarCorreoSMTP(correoSMTPRequestDto);

@@ -1,6 +1,6 @@
 package co.com.email.constantes;
 
-public class Constantes {
+public final class Constantes {
     private Constantes() {
     }
 

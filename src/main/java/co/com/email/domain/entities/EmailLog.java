@@ -1,7 +1,11 @@
 package co.com.email.domain.entities;
 
 import jakarta.persistence.Id;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
@@ -19,7 +23,7 @@ public class EmailLog {
 
     private String destinatario;
     private String asunto;
-    private String estado; // ENVIADO / ERROR
+    private String estado;
     private String error;
     private LocalDateTime fecha;
 }

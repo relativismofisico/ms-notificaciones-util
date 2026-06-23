@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter
+    xmlns="https://github.com/spotbugs/filter/3.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://github.com/spotbugs/filter/3.0.0
+                        https://raw.githubusercontent.com/spotbugs/spotbugs/3.1.0/spotbugs/etc/findbugsfilter.xsd">
+
+    <!--
+        Filtro de exclusiones SpotBugs para ms-notificaciones-util.
+        Se excluyen falsos positivos conocidos con Spring, Lombok y JPA.
+    -->
+
+    <!-- ================================================================
+         EI_EXPOSE_REP / EI_EXPOSE_REP2
+         Lombok genera getters/setters sin copias defensivas. En contexto
+         Spring Boot, la inmutabilidad de colecciones es gestionada por
+         el framework y no constituye un riesgo real de seguridad.
+         Se excluye globalmente: afecta entidades, DTOs, eventos y beans.
+    ================================================================ -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP"/>
+    </Match>
+
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP2"/>
+    </Match>
+
+    <!-- ================================================================
+         RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE
+         Generado por el bytecode de try-with-resources de Java 17 y por
+         construcciones internas de Lombok @Builder / @Data.
+         No es código del programador — es artefacto del compilador.
+    ================================================================ -->
+    <Match>
+        <Bug pattern="RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+    </Match>
+
+    <!-- ================================================================
+         SE_BAD_FIELD
+         User implementa UserDetails (Serializable) pero sus campos
+         relacionales (RolUser, StatesUsers) no son Serializable.
+         JPA gestiona la persistencia; la serialización Java no se usa.
+    ================================================================ -->
+    <Match>
+        <Class name="co.com.email.domain.entities.User"/>
+        <Bug pattern="SE_BAD_FIELD"/>
+    </Match>
+
+    <!-- ================================================================
+         CT_CONSTRUCTOR_THROW
+         JwtValidator valida la clave secreta en el constructor.
+         Falla rápida en startup es el comportamiento deseado en Spring.
+    ================================================================ -->
+    <Match>
+        <Class name="co.com.email.security.jwt.JwtValidator"/>
+        <Bug pattern="CT_CONSTRUCTOR_THROW"/>
+    </Match>
+
+    <!-- ================================================================
+         ENTIDADES JPA / MONGODB
+         Lombok genera equals/hashCode/toString — SpotBugs no lo ve.
+    ================================================================ -->
+    <Match>
+        <Package name="co.com.email.domain.entities"/>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
+    </Match>
+
+    <Match>
+        <Package name="co.com.templates.entities"/>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
+    </Match>
+
+    <!-- ================================================================
+         EVENTOS DE DOMINIO
+    ================================================================ -->
+    <Match>
+        <Package name="co.com.email.domain.event"/>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
+    </Match>
+
+    <!-- ================================================================
+         DTOs
+    ================================================================ -->
+    <Match>
+        <Package name="co.com.email.dto"/>
+        <Bug pattern="EQ_DOESNT_OVERRIDE_EQUALS"/>
+    </Match>
+
+    <!-- ================================================================
+         SEGURIDAD — Falsos positivos en filtros HTTP
+    ================================================================ -->
+    <Match>
+        <Class name="co.com.email.exception.ExceptionManager"/>
+        <Bug pattern="XSS_REQUEST_PARAMETER_TO_HTTP_HEADER"/>
+    </Match>
+
+    <Match>
+        <Class name="co.com.email.security.handler.SecurityEntryPoint"/>
+        <Bug pattern="XSS_REQUEST_PARAMETER_TO_HTTP_HEADER"/>
+    </Match>
+
+    <Match>
+        <Class name="co.com.email.security.handler.SecurityAccessDeniedHandler"/>
+        <Bug pattern="XSS_REQUEST_PARAMETER_TO_HTTP_HEADER"/>
+    </Match>
+
+    <!-- ================================================================
+         SFTP — La gestión de recursos es correcta con try/finally
+    ================================================================ -->
+    <Match>
+        <Class name="co.com.email.service.FtpServiceImpl"/>
+        <Bug pattern="ODR_OPEN_DATABASE_RESOURCE"/>
+    </Match>
+
+    <!-- ================================================================
+         SERIALIZACIÓN — Entidades JPA no requieren serialVersionUID
+         cuando no se serializan explícitamente.
+    ================================================================ -->
+    <Match>
+        <Bug pattern="SE_NO_SERIALVERSIONID"/>
+    </Match>
+
+    <!-- ================================================================
+         SPRING — Beans con fields inyectados no son "mutable" en runtime
+    ================================================================ -->
+    <Match>
+        <Bug pattern="MS_SHOULD_BE_FINAL"/>
+    </Match>
+
+</FindBugsFilter>

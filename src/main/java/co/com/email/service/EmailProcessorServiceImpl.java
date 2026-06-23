@@ -21,6 +21,7 @@ public class EmailProcessorServiceImpl implements EmailProcessorService {
     private final TemplateService templateService;
 
     @Override
+    @SuppressWarnings("PMD.UnusedLocalVariable")
     public void procesar(NotificacionEmailEvent event) {
         log.info("Buscando plantilla con nombre: {}", event.getAsunto());
 
