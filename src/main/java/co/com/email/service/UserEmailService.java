@@ -15,32 +15,21 @@ public class UserEmailService {
     private final PersonRepository personRepository;
 
     public String getEmailByUsername(String username) {
-
-        User user = userRepository
-                .findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        Long personIde = user.getPerson();
-
-        Person person = personRepository
-                .findById(personIde)
-                .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
-
-        return person.getEmail();
+        return findPersonByUsername(username).getEmail();
     }
 
     public String getFullNameByUsername(String username) {
+        Person person = findPersonByUsername(username);
+        return person.getFirstName() + " " + person.getFirstLastname();
+    }
 
+    private Person findPersonByUsername(String username) {
         User user = userRepository
                 .findByUsername(username)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        Long personIde = user.getPerson();
-
-        Person person = personRepository
-                .findById(personIde)
+        return personRepository
+                .findById(user.getPerson())
                 .orElseThrow(() -> new RuntimeException("Persona no encontrada"));
-
-        return person.getFirstName() + " " + person.getFirstLastname();
     }
 }
