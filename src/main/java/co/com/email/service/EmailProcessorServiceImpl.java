@@ -55,7 +55,10 @@ public class EmailProcessorServiceImpl implements EmailProcessorService {
                 continue;
             }
 
+
             try {
+
+                log.info("Paso 1 - Antes de templateService.build()");
                 String html = templateService.build(
                         event.getAsunto(),
                         event.getData());
@@ -82,13 +85,23 @@ public class EmailProcessorServiceImpl implements EmailProcessorService {
                             html
                     );
                 }
-
+                log.info("Paso 2 - HTML generado");
                 guardarLog(email, event.getAsunto(), "ENVIADO", null);
                 log.info("✅ Correo enviado a {}", email);
 
             } catch (Exception e) {
-                guardarLog(email, event.getAsunto(), "ERROR", e.getMessage());
-                guardarLog(dest.getEmail(), event.getAsunto(), "ERROR", e.getMessage());            }
+                log.error(
+                        "Error enviando correo a {}",
+                        email,
+                        e
+                );
+
+                guardarLog(
+                        email,
+                        event.getAsunto(),
+                        "ERROR",
+                        e.getClass().getName() + ": " + e.getMessage()
+                );            }
         }
     }
     private void guardarLog(String email, String asunto, String estado, String error) {

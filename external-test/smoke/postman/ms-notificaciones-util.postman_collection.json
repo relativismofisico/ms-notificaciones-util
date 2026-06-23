@@ -1,0 +1,28 @@
+{
+	"info": {
+		"_postman_id": "617fbbaa-d0c7-48d4-9e3d-cb19da296990",
+		"name": "ms-notificaciones-util",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "10415379"
+	},
+	"item": [
+		{
+			"name": "sendHTMLEmail",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{   \r\n    \"nombreRemitente\": \"John Fredy Redondo\",\r\n    \"correoRemitente\": \"relativismofisico@gmail.com\",\r\n    \"asunto\": \"Welcome new constomer\", \r\n    \"destinatarios\": [\"david.gaviria.tatis@gmail.com\"],\r\n    \"cuerpoTexto\": \"John Redondo\",\r\n    \"cuerpoHtml\": \"newCustomerPlus.html\",\r\n    \"firma\": \"Atentamente, Nombre de la Empresa\"\r\n\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "http://localhost:8080/api/v1/sendHTMLEmail"
+			},
+			"response": []
+		}
+	]
+}
