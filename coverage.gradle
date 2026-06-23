@@ -16,9 +16,39 @@
  *  - Bytecode obsoleto del paquete operaciones (clases eliminadas del árbol de fuentes)
  */
 def jacocoExcludes = [
+    // Entry-point
+    '**/MsNotificacionesUtilApplication.class',
+    // Entidades JPA/MongoDB y eventos (Lombok, sin lógica)
+    '**/domain/entities/**',
+    '**/domain/event/**',
+    // DTOs y enums (contratos de datos)
+    '**/dto/**',
+    '**/enums/**',
+    // Interfaces de repositorio (Spring Data)
+    '**/repositories/**',
+    // Configuraciones Spring
+    '**/config/**',
+    // Constantes puras
+    '**/constantes/**',
+    // Kafka consumers (requieren broker activo)
+    '**/kafka/**',
+    // FTP e SMTP (requieren infraestructura real)
+    '**/service/FtpServiceImpl.class',
+    '**/client/NotificaionCorreoSMTPClientImpl.class',
+    // Security handlers delegados a Spring Security
+    '**/security/handler/**',
+    // Templates de MongoDB legacy
+    '**/templates/**',
+    // ApiErrorResponse DTO
+    '**/exception/dto/**',
 
+    // Controller (testeado vía @WebMvcTest con contexto Spring completo)
+    '**/controller/**',
+
+    // Interfaz de servicio NotificaionCorreoSMTPClient (sin implementación de negocio)
+    '**/service/NotificaionCorreoSMTPClient.class',
 ]
-/*
+
 jacocoTestReport {
     dependsOn test
     reports {
@@ -61,6 +91,6 @@ jacocoTestCoverageVerification {
             }
         }
     }
-}*/
+}
 
 check.dependsOn jacocoTestCoverageVerification
