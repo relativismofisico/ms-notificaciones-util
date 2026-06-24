@@ -1,0 +1,6 @@
+escenario,correoRemitente,destinatario,destinatarioCc,cuerpoTexto,expectedStatus
+correo-valido,qa-auto@empresa.com,qa-destinatario@empresa.com,,Prueba de rendimiento QA - ms-notificaciones-util,204
+correo-valido-firma,qa-auto@empresa.com,qa-destinatario@empresa.com,,Prueba de rendimiento QA con firma,204
+correo-cc,qa-auto@empresa.com,qa-to@empresa.com,qa-cc@empresa.com,Prueba de rendimiento QA con copia CC,204
+correo-multidest,qa-auto@empresa.com,qa-to1@empresa.com,,Prueba QA con multiples destinatarios,204
+correo-cuerpo-largo,qa-auto@empresa.com,qa-destinatario@empresa.com,,Prueba QA con cuerpo extenso para evaluacion de rendimiento del microservicio de notificaciones en ambiente de calidad.,204

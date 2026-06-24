@@ -1,0 +1,6 @@
+escenario,correoRemitente,destinatario,destinatarioCc,cuerpoTexto,expectedStatus
+correo-valido,qa-auto@empresa.com,qa-destinatario@empresa.com,,Este correo fue generado por la suite de pruebas de rendimiento JMeter.,204
+correo-valido-firma,qa-auto@empresa.com,qa-destinatario@empresa.com,,Prueba de rendimiento con firma - Equipo QA,204
+correo-cc,qa-auto@empresa.com,qa-to@empresa.com,qa-cc@empresa.com,Prueba de rendimiento con copia CC,204
+correo-multidest,qa-auto@empresa.com,qa-to1@empresa.com,,Prueba con multiples destinatarios - iteracion de carga,204
+correo-cuerpo-largo,qa-auto@empresa.com,qa-destinatario@empresa.com,,Este es un correo con cuerpo largo para pruebas de rendimiento del microservicio ms-notificaciones-util. Contiene texto suficientemente largo para evaluar el rendimiento de procesamiento.,204
