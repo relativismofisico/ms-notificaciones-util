@@ -1,3 +1,69 @@
+spring:
+  application:
+    name: ms-notificaciones-util
+  datasource:
+    url: jdbc:mysql://dbcompany.cn48sgciaax1.us-east-2.rds.amazonaws.com:3306/dbcompany?useSSL=false&serverTimezone=UTC
+    username: desarrollador
+    password: Juliana1987****
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/DB_Facturas
+      database: DB_Facturas
+  kafka:
+    consumer:
+      bootstrap-servers: localhost:9092
+      group-id: notificaciones-group
+      auto-offset-reset: latest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        "[spring.deserializer.value.delegate.class]": org.springframework.kafka.support.serializer.JsonDeserializer
+        "[spring.json.trusted.packages]": "*"
+        "[spring.json.use.type.headers]": true
+        "[spring.json.type.mapping]": "com.negociadororq.domain.event.NotificacionEmailEvent:co.com.email.domain.event.NotificacionEmailEvent,com.cargafacturas.domain.event.NotificacionEmailEvent:co.com.email.domain.event.NotificacionEmailEvent,com.security.ms_security.domain.event.OtpCreatedEvent:co.com.email.domain.event.OtpCreatedEvent,com.co.ms_instrucciones_util.infrastructure.kafka.event.InstruccionPagoEvent:co.com.email.domain.event.InstruccionPagoEvent,operaciones.domain.event.NotificacionEmailEvent:co.com.email.domain.event.NotificacionEmailEvent"
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: jhon.redondo1@gmail.com
+    password: "whvu fbtg meiz zvjn"
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  cloud:
+    zookeeper:
+      config:
+        enabled: false
+        import-check:
+          enabled: false
+
+logging:
+  level:
+    org.hibenate.SQL: debug
+
+server:
+  servlet:
+    context-path: /securityapi
+  port: 8055
+
+cantidadLimiteDestinatarios: 50
+
+topics:
+  otp-created: otp.created
+  otp-email-sent: otp.email.sent
+  notificacion-email: notificacion.email
+  instrucciones: instrucciones.generadas
+
 security:
   jwt:
     secret: ${JWT_SECRET:AF84F1FGllNpNnLG055fdg5hGHJK4KGG5VH5TR5J05JFGGDFDGXVV545J4505G666JFGF2mMY95y}
