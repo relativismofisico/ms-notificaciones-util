@@ -1,0 +1,831 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="ms-notificaciones-util | Smoke (1 hilo)" enabled="true">
+      <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <stringProp name="TestPlan.comments">Smoke test: 1 hilo, 1 loop. Cubre happy path, seguridad y validaciones.
+Ejecutar: jmeter -n -t ms-notificaciones-smoke.jmx -q ../config/dev.properties -l ../results/smoke.jtl -e -o ../reports/smoke-YYYYMMDD</stringProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+
+      <!-- ═══════════════════════════════════════════════════════════════════════
+           SETUP: Generación de tokens JWT (se ejecuta una sola vez antes del test)
+           ═══════════════════════════════════════════════════════════════════════ -->
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp - Generación JWT" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </SetupThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Generar Tokens JWT (HMAC-SHA256)" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script"><![CDATA[
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
+
+def buildJWT = { String username, String rol, byte[] secretBytes, int expirySeconds ->
+    def b64 = java.util.Base64.getUrlEncoder().withoutPadding()
+    def header = '{"alg":"HS256","typ":"JWT"}'
+    def hB64 = b64.encodeToString(header.getBytes("UTF-8"))
+    long now = System.currentTimeMillis() / 1000
+    long exp = now + expirySeconds
+    def payload = "{\"sub\":\"${username}\",\"rol\":\"${rol}\",\"iat\":${now},\"exp\":${exp}}"
+    def pB64 = b64.encodeToString(payload.getBytes("UTF-8"))
+    def data = "${hB64}.${pB64}"
+    def mac = Mac.getInstance("HmacSHA256")
+    mac.init(new SecretKeySpec(secretBytes, "HmacSHA256"))
+    def sig = b64.encodeToString(mac.doFinal(data.getBytes("UTF-8")))
+    return "${data}.${sig}"
+}
+
+def jwtSecret = props.get("jwt.secret")
+if (!jwtSecret || jwtSecret.startsWith("CONFIGURAR")) {
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseMessage("ERROR: jwt.secret no configurado. Usar -Djwt.secret=<valor>")
+    return
+}
+
+int expiry = Integer.parseInt(props.get("jwt.expiry.seconds") ?: "3600")
+byte[] secretBytes = java.util.Base64.getDecoder().decode(jwtSecret)
+
+props.put("jwt.token.admin",     buildJWT("qa-admin",   "ADMINISTRADOR", secretBytes, expiry))
+props.put("jwt.token.empresa",   buildJWT("qa-empresa", "EMPRESA",       secretBytes, expiry))
+props.put("jwt.token.sinacceso", buildJWT("qa-soporte", "SOPORTE",       secretBytes, expiry))
+
+log.info("[JWT] Tokens generados correctamente | expiry=${expiry}s")
+SampleResult.setSuccessful(true)
+SampleResult.setResponseMessage("Tokens JWT generados: ADMINISTRADOR, EMPRESA, SOPORTE")
+          ]]></stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+      </hashTree>
+
+      <!-- ═══════════════════════════════════════════════════════════════════════
+           MAIN THREAD GROUP: 1 hilo, 1 loop
+           ═══════════════════════════════════════════════════════════════════════ -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Smoke - 1 hilo / 1 loop" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </ThreadGroup>
+      <hashTree>
+
+        <!-- HTTP Defaults -->
+        <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${__P(host,localhost)}</stringProp>
+          <stringProp name="HTTPSampler.port">${__P(port,8055)}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${__P(protocol,http)}</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout">${__P(connect.timeout,10000)}</stringProp>
+          <stringProp name="HTTPSampler.response_timeout">${__P(response.timeout,30000)}</stringProp>
+        </ConfigTestElement>
+        <hashTree/>
+
+        <!-- Lee tokens JWT desde JMeter Props (escritas por setUp) y los pone en vars de hilo -->
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="[Config] Leer Tokens JWT desde Props" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script"><![CDATA[
+vars.put("jwt_admin",     props.get("jwt.token.admin")     ?: "")
+vars.put("jwt_empresa",   props.get("jwt.token.empresa")   ?: "")
+vars.put("jwt_sinacceso", props.get("jwt.token.sinacceso") ?: "")
+def len = vars.get("jwt_admin")?.length() ?: 0
+log.info("[Config] jwt_admin length=" + len + (len > 0 ? " OK" : " VACIO!"))
+SampleResult.setSuccessful(true)
+SampleResult.setResponseMessage("JWT vars cargadas desde props")
+          ]]></stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+
+        <!-- Content-Type header (Thread Group level) -->
+        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Header - Content-Type" enabled="true">
+          <collectionProp name="HeaderManager.headers">
+            <elementProp name="Content-Type" elementType="Header">
+              <stringProp name="Header.name">Content-Type</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+            <elementProp name="Accept" elementType="Header">
+              <stringProp name="Header.name">Accept</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+          </collectionProp>
+        </HeaderManager>
+        <hashTree/>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC01 | Happy Path - Correo Válido (datos de correo-valido.json Karate)
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC01] Happy Path - Correo Válido" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - correo-valido [204]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "nombreRemitente": "QA Automatizado",
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test Funcional JMeter - Smoke",
+  "destinatarios": ["qa-destinatario@empresa.com"],
+  "cuerpoTexto": "Este correo fue generado por la suite de pruebas de rendimiento JMeter.",
+  "firma": "Equipo QA - ms-notificaciones-util"
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - ADMINISTRADOR" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${jwt_admin}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 204" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="49586">204</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Se esperaba HTTP 204 No Content</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Tiempo de respuesta &lt; 5000ms" enabled="true">
+              <stringProp name="DurationAssertion.duration">${__P(threshold.smoke.ms,5000)}</stringProp>
+            </DurationAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC02 | Happy Path - Correo Completo (datos de correo-completo.json Karate)
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC02] Happy Path - Correo Completo (CC, BCC, Adjunto)" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - correo-completo [204]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "nombreRemitente": "QA Automatizado",
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test Funcional JMeter - Completo",
+  "destinatarios": ["qa-to1@empresa.com", "qa-to2@empresa.com"],
+  "destinatariosCc": ["qa-cc@empresa.com"],
+  "destinatariosBcc": ["qa-bcc@empresa.com"],
+  "cuerpoTexto": "Cuerpo en texto plano del correo de prueba.",
+  "cuerpoHtml": "&lt;html&gt;&lt;body&gt;&lt;h1&gt;Test QA JMeter&lt;/h1&gt;&lt;p&gt;Correo de prueba de rendimiento.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;",
+  "firma": "Equipo QA",
+  "adjuntos": [
+    {
+      "nombreArchivo": "documento-prueba",
+      "extension": "pdf",
+      "archivoBase64": "JVBERi0xLjQKJdPr6eEKMSAwIG9iago8PAovVHlwZSAvQ2F0YWxvZwo+PgplbmRvYmoK"
+    }
+  ]
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - ADMINISTRADOR" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${jwt_admin}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 204" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="49586">204</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Tiempo de respuesta &lt; 5000ms" enabled="true">
+              <stringProp name="DurationAssertion.duration">${__P(threshold.smoke.ms,5000)}</stringProp>
+            </DurationAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC03 | Happy Path - Rol EMPRESA
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC03] Happy Path - Rol EMPRESA [204]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - rol EMPRESA [204]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "nombreRemitente": "QA Automatizado",
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test JMeter - Rol EMPRESA",
+  "destinatarios": ["qa-destinatario@empresa.com"],
+  "cuerpoTexto": "Prueba con rol EMPRESA"
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - EMPRESA" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${jwt_empresa}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 204" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="49586">204</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC04 | Seguridad - Sin Authorization Header → 401
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC04] Seguridad - Sin Authorization [401]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - sin token [401]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test seguridad sin token",
+  "destinatarios": ["qa-destinatario@empresa.com"]
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 401" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52340">401</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Se esperaba HTTP 401 Unauthorized</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Tiempo de respuesta &lt; 3000ms" enabled="true">
+              <stringProp name="DurationAssertion.duration">3000</stringProp>
+            </DurationAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC05 | Seguridad - Token con firma inválida → 401
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC05] Seguridad - Token Inválido [401]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - token firma inválida [401]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test token invalido",
+  "destinatarios": ["qa-destinatario@empresa.com"]
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - Token Firma Inválida" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJoYWNrZXIiLCJyb2wiOiJBRE1JTklTVFJBRE9SIn0.firma_invalida_modificada</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 401" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52340">401</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Token con firma inválida debe retornar 401</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert code TOKEN_INVALID en body" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1000">TOKEN_INVALID</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">2</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC06 | Seguridad - Rol SOPORTE (sin acceso al grupo administracion) → 403
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC06] Seguridad - Rol Sin Acceso [403]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - rol SOPORTE [403]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test rol sin acceso",
+  "destinatarios": ["qa-destinatario@empresa.com"]
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - SOPORTE (sin acceso)" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${jwt_sinacceso}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 403" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52341">403</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Rol SOPORTE no tiene acceso - debe retornar 403</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC07 | Validación Bean - Sin correoRemitente → 400
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC07] Validación - Sin correoRemitente [400]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - sin correoRemitente [400]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "asunto": "Test sin correoRemitente",
+  "destinatarios": ["qa-destinatario@empresa.com"],
+  "cuerpoTexto": "Cuerpo de prueba"
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - ADMINISTRADOR" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${jwt_admin}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 400" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52400">400</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Sin correoRemitente debe retornar 400</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert VALIDATION_ERROR en body" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1001">VALIDATION_ERROR</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">2</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC08 | Validación Bean - Sin asunto → 400
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC08] Validación - Sin asunto [400]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - sin asunto [400]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "correoRemitente": "qa-auto@empresa.com",
+  "destinatarios": ["qa-destinatario@empresa.com"],
+  "cuerpoTexto": "Cuerpo de prueba"
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - ADMINISTRADOR" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${jwt_admin}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 400" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52400">400</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC09 | Validación Bean - Sin destinatarios → 400
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC09] Validación - Sin destinatarios [400]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - sin destinatarios [400]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "correoRemitente": "qa-auto@empresa.com",
+  "asunto": "Test sin destinatarios",
+  "cuerpoTexto": "Cuerpo de prueba"
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - ADMINISTRADOR" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${jwt_admin}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 400" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52400">400</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC10 | Validación Negocio - correoRemitente formato inválido → 422
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC10] Validación Negocio - Email Formato Inválido [422]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo - email inválido [422]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+            <stringProp name="HTTPSampler.method">POST</stringProp>
+            <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments">
+                <elementProp name="" elementType="HTTPArgument">
+                  <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                  <stringProp name="Argument.value">{
+  "correoRemitente": "no-es-un-email",
+  "asunto": "Test email formato inválido",
+  "destinatarios": ["qa-destinatario@empresa.com"]
+}</stringProp>
+                  <stringProp name="Argument.metadata">=</stringProp>
+                </elementProp>
+              </collectionProp>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Auth Header - ADMINISTRADOR" enabled="true">
+              <collectionProp name="HeaderManager.headers">
+                <elementProp name="Authorization" elementType="Header">
+                  <stringProp name="Header.name">Authorization</stringProp>
+                  <stringProp name="Header.value">Bearer ${jwt_admin}</stringProp>
+                </elementProp>
+              </collectionProp>
+            </HeaderManager>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 422" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52422">422</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Email con formato inválido debe retornar 422</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert EMAIL_VALIDATION_ERROR en body" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1002">EMAIL_VALIDATION_ERROR</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">2</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC11 | Endpoints Públicos - Swagger UI → 200
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC11] Endpoints Públicos - Swagger UI [200]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /swagger-ui/index.html [200]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/swagger-ui/index.html</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments"/>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52200">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.custom_message">Swagger UI debe ser accesible sin token</stringProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Tiempo de respuesta &lt; 3000ms" enabled="true">
+              <stringProp name="DurationAssertion.duration">3000</stringProp>
+            </DurationAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             TC12 | Endpoints Públicos - OpenAPI Docs → 200
+             ───────────────────────────────────────────────────────────────────── -->
+        <TransactionController guiclass="TransactionControllerGui" testclass="TransactionController" testname="[TC12] Endpoints Públicos - OpenAPI Docs [200]" enabled="true">
+          <boolProp name="TransactionController.includeTimers">false</boolProp>
+          <boolProp name="TransactionController.parent">true</boolProp>
+        </TransactionController>
+        <hashTree>
+          <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="GET /v3/api-docs [200]" enabled="true">
+            <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/v3/api-docs</stringProp>
+            <stringProp name="HTTPSampler.method">GET</stringProp>
+            <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+            <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+            <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+            <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+              <collectionProp name="Arguments.arguments"/>
+            </elementProp>
+          </HTTPSamplerProxy>
+          <hashTree>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 200" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="52200">200</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">8</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+            <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert info.title presente en body" enabled="true">
+              <collectionProp name="Asserion.test_strings">
+                <stringProp name="1003">ms-notificaciones-util</stringProp>
+              </collectionProp>
+              <stringProp name="Assertion.test_field">Assertion.response_data</stringProp>
+              <boolProp name="Assertion.assume_success">true</boolProp>
+              <intProp name="Assertion.test_type">2</intProp>
+            </ResponseAssertion>
+            <hashTree/>
+          </hashTree>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             LISTENERS
+             ───────────────────────────────────────────────────────────────────── -->
+        <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>true</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename">${__P(results.file,)}</stringProp>
+        </ResultCollector>
+        <hashTree/>
+
+        <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree (solo debug)" enabled="false">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>true</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

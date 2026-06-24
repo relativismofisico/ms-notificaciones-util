@@ -60,3 +60,16 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Gradle ###
+.gradle/
+gradle-app.setting
+
+### JMeter - Artefactos generados en ejecución ###
+# Resultados crudos (JTL)
+external-test/jmeter/results/*.jtl
+# Reportes HTML generados
+external-test/jmeter/reports/*/
+# Logs de ejecución JMeter
+external-test/jmeter/*.log
+jmeter.log

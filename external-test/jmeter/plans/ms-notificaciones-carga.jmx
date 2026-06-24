@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="ms-notificaciones-util | Carga (10 hilos)" enabled="true">
+      <boolProp name="TestPlan.serialize_threadgroups">true</boolProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <stringProp name="TestPlan.comments">Perfil de carga básica: 10 hilos, ramp-up 10s, duración 60s.
+Métricas objetivo: p95 &lt; 3000ms, error rate &lt; 1%, throughput sostenido.
+Ejecutar: jmeter -n -t ms-notificaciones-carga.jmx -q ../config/dev.properties -l ../results/carga.jtl -e -o ../reports/carga-YYYYMMDD</stringProp>
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+    </TestPlan>
+    <hashTree>
+
+      <!-- ═══════════════════════════════════════════════════════════════════════
+           SETUP: Generación de tokens JWT
+           ═══════════════════════════════════════════════════════════════════════ -->
+      <SetupThreadGroup guiclass="SetupThreadGroupGui" testclass="SetupThreadGroup" testname="setUp - Generación JWT" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">stoptest</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+          <intProp name="LoopController.loops">1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">1</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">1</stringProp>
+        <boolProp name="ThreadGroup.scheduler">false</boolProp>
+      </SetupThreadGroup>
+      <hashTree>
+        <JSR223Sampler guiclass="TestBeanGUI" testclass="JSR223Sampler" testname="Generar Tokens JWT (HMAC-SHA256)" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script"><![CDATA[
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
+
+def buildJWT = { String username, String rol, byte[] secretBytes, int expirySeconds ->
+    def b64 = java.util.Base64.getUrlEncoder().withoutPadding()
+    def header = '{"alg":"HS256","typ":"JWT"}'
+    def hB64 = b64.encodeToString(header.getBytes("UTF-8"))
+    long now = System.currentTimeMillis() / 1000
+    long exp = now + expirySeconds
+    def payload = "{\"sub\":\"${username}\",\"rol\":\"${rol}\",\"iat\":${now},\"exp\":${exp}}"
+    def pB64 = b64.encodeToString(payload.getBytes("UTF-8"))
+    def data = "${hB64}.${pB64}"
+    def mac = Mac.getInstance("HmacSHA256")
+    mac.init(new SecretKeySpec(secretBytes, "HmacSHA256"))
+    def sig = b64.encodeToString(mac.doFinal(data.getBytes("UTF-8")))
+    return "${data}.${sig}"
+}
+
+def jwtSecret = props.get("jwt.secret")
+if (!jwtSecret || jwtSecret.startsWith("CONFIGURAR")) {
+    SampleResult.setSuccessful(false)
+    SampleResult.setResponseMessage("ERROR: jwt.secret no configurado")
+    return
+}
+
+int expiry = Integer.parseInt(props.get("jwt.expiry.seconds") ?: "3600")
+byte[] secretBytes = java.util.Base64.getDecoder().decode(jwtSecret)
+
+props.put("jwt.token.admin",   buildJWT("qa-admin",   "ADMINISTRADOR", secretBytes, expiry))
+props.put("jwt.token.empresa", buildJWT("qa-empresa", "EMPRESA",       secretBytes, expiry))
+
+log.info("[JWT] Tokens generados | expiry=${expiry}s | hilos=10")
+SampleResult.setSuccessful(true)
+SampleResult.setResponseMessage("Tokens JWT generados: ADMINISTRADOR, EMPRESA")
+          ]]></stringProp>
+        </JSR223Sampler>
+        <hashTree/>
+      </hashTree>
+
+      <!-- ═══════════════════════════════════════════════════════════════════════
+           MAIN THREAD GROUP: 10 hilos, ramp-up 10s, duración 60s
+           ═══════════════════════════════════════════════════════════════════════ -->
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Carga - 10 hilos / 60s" enabled="true">
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
+          <boolProp name="LoopController.continue_forever">true</boolProp>
+          <intProp name="LoopController.loops">-1</intProp>
+        </elementProp>
+        <stringProp name="ThreadGroup.num_threads">${__P(load.threads,10)}</stringProp>
+        <stringProp name="ThreadGroup.ramp_time">${__P(load.rampup,10)}</stringProp>
+        <boolProp name="ThreadGroup.delayedStart">false</boolProp>
+        <boolProp name="ThreadGroup.scheduler">true</boolProp>
+        <stringProp name="ThreadGroup.duration">${__P(load.duration,60)}</stringProp>
+        <stringProp name="ThreadGroup.delay">0</stringProp>
+      </ThreadGroup>
+      <hashTree>
+
+        <!-- HTTP Defaults -->
+        <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" enabled="true">
+            <collectionProp name="Arguments.arguments"/>
+          </elementProp>
+          <stringProp name="HTTPSampler.domain">${__P(host,localhost)}</stringProp>
+          <stringProp name="HTTPSampler.port">${__P(port,8055)}</stringProp>
+          <stringProp name="HTTPSampler.protocol">${__P(protocol,http)}</stringProp>
+          <stringProp name="HTTPSampler.contentEncoding">UTF-8</stringProp>
+          <stringProp name="HTTPSampler.connect_timeout">${__P(connect.timeout,10000)}</stringProp>
+          <stringProp name="HTTPSampler.response_timeout">${__P(response.timeout,30000)}</stringProp>
+        </ConfigTestElement>
+        <hashTree/>
+
+        <!-- Headers Thread Group (Content-Type + Authorization para todos los samplers) -->
+        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="Headers - Content-Type y Auth ADMINISTRADOR" enabled="true">
+          <collectionProp name="HeaderManager.headers">
+            <elementProp name="Content-Type" elementType="Header">
+              <stringProp name="Header.name">Content-Type</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+            <elementProp name="Accept" elementType="Header">
+              <stringProp name="Header.name">Accept</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+            <elementProp name="Authorization" elementType="Header">
+              <stringProp name="Header.name">Authorization</stringProp>
+              <stringProp name="Header.value">Bearer ${jwt_admin}</stringProp>
+            </elementProp>
+          </collectionProp>
+        </HeaderManager>
+        <hashTree/>
+
+        <!-- Lee token JWT desde Props y lo pone en var de hilo -->
+        <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="[Config] jwt_admin desde Props" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">true</stringProp>
+          <stringProp name="script"><![CDATA[
+vars.put("jwt_admin", props.get("jwt.token.admin") ?: "")
+          ]]></stringProp>
+        </JSR223PreProcessor>
+        <hashTree/>
+
+        <!-- CSV Data Set: rotación de payloads de prueba -->
+        <CSVDataSet guiclass="TestBeanGUI" testclass="CSVDataSet" testname="CSV Data - Payloads" enabled="true">
+          <stringProp name="filename">${__P(data.dir,../data/dev)}/payloads.csv</stringProp>
+          <stringProp name="variableNames">escenario,correoRemitente,destinatario,destinatarioCc,cuerpoTexto,expectedStatus</stringProp>
+          <boolProp name="ignoreFirstLine">true</boolProp>
+          <stringProp name="delimiter">,</stringProp>
+          <boolProp name="quotedData">false</boolProp>
+          <boolProp name="recycle">true</boolProp>
+          <boolProp name="stopThread">false</boolProp>
+          <stringProp name="shareMode">shareMode.all</stringProp>
+        </CSVDataSet>
+        <hashTree/>
+
+        <!-- JSR223 PreProcessor: construye el body con contador único para cada iteración -->
+        <JSR223PreProcessor guiclass="TestBeanGUI" testclass="JSR223PreProcessor" testname="Build Request Body (unicidad por iteración)" enabled="true">
+          <stringProp name="scriptLanguage">groovy</stringProp>
+          <stringProp name="parameters"></stringProp>
+          <stringProp name="filename"></stringProp>
+          <stringProp name="cacheKey">false</stringProp>
+          <stringProp name="script"><![CDATA[
+def uniqueId = System.nanoTime()
+def threadNum = ctx.getThreadNum()
+def correoRemitente = vars.get("correoRemitente") ?: "qa-auto@empresa.com"
+def destinatario    = vars.get("destinatario")    ?: "qa-destinatario@empresa.com"
+def cuerpoTexto     = vars.get("cuerpoTexto")     ?: "Prueba de rendimiento JMeter"
+def escenario       = vars.get("escenario")       ?: "correo-valido"
+
+def body = """{
+  "nombreRemitente": "QA Performance",
+  "correoRemitente": "${correoRemitente}",
+  "asunto": "Test Carga JMeter - ${escenario} | hilo=${threadNum} | id=${uniqueId}",
+  "destinatarios": ["${destinatario}"],
+  "cuerpoTexto": "${cuerpoTexto}",
+  "firma": "Equipo QA Performance - ms-notificaciones-util"
+}"""
+
+vars.put("request_body", body)
+          ]]></stringProp>
+        </JSR223PreProcessor>
+        <hashTree/>
+
+        <!-- Sampler principal: POST /notificarCorreo -->
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="POST /notificarCorreo [204]" enabled="true">
+          <stringProp name="HTTPSampler.path">${__P(base_path,/securityapi)}/notificarCorreo</stringProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">${request_body}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree>
+          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="Assert HTTP 204" enabled="true">
+            <collectionProp name="Asserion.test_strings">
+              <stringProp name="49586">204</stringProp>
+            </collectionProp>
+            <stringProp name="Assertion.custom_message">Se esperaba HTTP 204 No Content</stringProp>
+            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
+            <boolProp name="Assertion.assume_success">true</boolProp>
+            <intProp name="Assertion.test_type">8</intProp>
+          </ResponseAssertion>
+          <hashTree/>
+          <DurationAssertion guiclass="DurationAssertionGui" testclass="DurationAssertion" testname="Tiempo de respuesta &lt; 3000ms (p95 objetivo)" enabled="true">
+            <stringProp name="DurationAssertion.duration">${__P(threshold.load.p95.ms,3000)}</stringProp>
+          </DurationAssertion>
+          <hashTree/>
+        </hashTree>
+
+        <!-- ─────────────────────────────────────────────────────────────────────
+             LISTENERS
+             ───────────────────────────────────────────────────────────────────── -->
+        <ResultCollector guiclass="SummaryReport" testclass="ResultCollector" testname="Summary Report" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>true</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename">${__P(results.file,)}</stringProp>
+        </ResultCollector>
+        <hashTree/>
+
+        <ResultCollector guiclass="StatVisualizer" testclass="ResultCollector" testname="Aggregate Report" enabled="true">
+          <boolProp name="ResultCollector.error_logging">false</boolProp>
+          <objProp>
+            <name>saveConfig</name>
+            <value class="SampleSaveConfiguration">
+              <time>true</time>
+              <latency>true</latency>
+              <timestamp>true</timestamp>
+              <success>true</success>
+              <label>true</label>
+              <code>true</code>
+              <message>true</message>
+              <threadName>true</threadName>
+              <dataType>true</dataType>
+              <encoding>false</encoding>
+              <assertions>true</assertions>
+              <subresults>true</subresults>
+              <responseData>false</responseData>
+              <samplerData>false</samplerData>
+              <xml>false</xml>
+              <fieldNames>true</fieldNames>
+              <responseHeaders>false</responseHeaders>
+              <requestHeaders>false</requestHeaders>
+              <responseDataOnError>true</responseDataOnError>
+              <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+              <bytes>true</bytes>
+              <sentBytes>true</sentBytes>
+              <url>true</url>
+              <threadCounts>true</threadCounts>
+              <idleTime>true</idleTime>
+              <connectTime>true</connectTime>
+            </value>
+          </objProp>
+          <stringProp name="filename"></stringProp>
+        </ResultCollector>
+        <hashTree/>
+
+      </hashTree>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>

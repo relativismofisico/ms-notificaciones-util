@@ -1,0 +1,4 @@
+escenario,path,method,expectedStatus
+swagger-ui,/securityapi/swagger-ui/index.html,GET,200
+openapi-docs,/securityapi/v3/api-docs,GET,200
+swagger-resources,/securityapi/swagger-resources,GET,200
