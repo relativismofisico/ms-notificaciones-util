@@ -1,6 +1,7 @@
 package co.com.email.exception.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -14,49 +15,54 @@ import java.util.List;
 @Getter
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Schema(description = "Respuesta de error estándar de la plataforma Factoring")
 public class ApiErrorResponse {
 
-    /**
-     * Momento en que ocurrió el error (UTC).
-     */
+    @Schema(description = "Momento en que ocurrió el error (UTC)", example = "2024-01-15T10:30:00")
     private final LocalDateTime timestamp;
 
-    /**
-     * Código HTTP de la respuesta (ej: 400, 422, 500).
-     */
+    @Schema(description = "Código HTTP de la respuesta", example = "400")
     private final int status;
 
-    /**
-     * Descripción estándar del código HTTP (ej: "Bad Request").
-     */
+    @Schema(description = "Descripción estándar del código HTTP", example = "Bad Request")
     private final String error;
 
-    /**
-     * Código de error interno de la plataforma (ej: "EMAIL_VALIDATION_ERROR").
-     * Facilita la trazabilidad entre microservicios.
-     */
+    @Schema(
+            description = "Código de error interno de la plataforma para trazabilidad",
+            example = "VALIDATION_ERROR",
+            allowableValues = {
+                    "VALIDATION_ERROR",
+                    "TOKEN_EXPIRED",
+                    "TOKEN_INVALID",
+                    "FORBIDDEN",
+                    "RESOURCE_NOT_FOUND",
+                    "EMAIL_VALIDATION_ERROR",
+                    "INTERNAL_ERROR"
+            }
+    )
     private final String code;
 
-    /**
-     * Mensaje legible para el consumidor del API.
-     */
+    @Schema(description = "Mensaje legible para el consumidor del API", example = "Uno o más parámetros no son válidos")
     private final String message;
 
-    /**
-     * Path del endpoint que originó el error.
-     */
+    @Schema(description = "Path del endpoint que originó el error", example = "/notificarCorreo")
     private final String path;
 
-    /**
-     * Lista de errores de validación de campos (solo presente en 400/422).
-     */
+    @Schema(description = "Lista de errores de validación de campos. Solo presente en respuestas 400.")
     private final List<FieldError> fieldErrors;
 
     @Getter
     @Builder
+    @Schema(description = "Detalle de un campo con error de validación")
     public static class FieldError {
+
+        @Schema(description = "Nombre del campo con error", example = "correoRemitente")
         private final String field;
+
+        @Schema(description = "Valor rechazado", example = "correo-invalido")
         private final String rejectedValue;
+
+        @Schema(description = "Mensaje de validación", example = "no debe estar vacío")
         private final String message;
     }
 }
