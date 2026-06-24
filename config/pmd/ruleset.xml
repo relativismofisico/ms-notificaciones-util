@@ -42,8 +42,6 @@
         <exclude name="MethodArgumentCouldBeFinal"/>
         <!-- Agregar 'final' a todas las variables locales es excesivo -->
         <exclude name="LocalVariableCouldBeFinal"/>
-        <!-- Lombok @AllArgsConstructor puede generar constructores largos -->
-        <exclude name="ExcessiveParameterList"/>
         <!-- Nombres cortos aceptados en lambdas y bucles -->
         <exclude name="ShortVariable"/>
         <exclude name="LongVariable"/>
@@ -53,13 +51,6 @@
         <exclude name="FieldDeclarationsShouldBeAtStartOfClass"/>
         <!-- Permite retornar directamente sin variable intermedia -->
         <exclude name="UnnecessaryLocalBeforeReturn"/>
-        <!-- RuntimeException intencional en infraestructura / wrappers -->
-        <exclude name="AvoidThrowingRawExceptionTypes"/>
-        <!-- Admite múltiples campos en entidades JPA -->
-        <exclude name="TooManyFields"/>
-        <!-- Anotaciones Spring no requieren comentarios obligatorios -->
-        <exclude name="CommentRequired"/>
-        <exclude name="CommentSize"/>
         <!-- Spring IoC gestiona constructores -->
         <exclude name="AtLeastOneConstructor"/>
         <!-- Múltiples returns son necesarios en guards defensivos -->
@@ -70,12 +61,9 @@
         <exclude name="ConfusingTernary"/>
         <!-- Guiones bajos en literales numéricos opcionales -->
         <exclude name="UseUnderscoresInNumericLiterals"/>
-        <!-- Evitar re-asignación de parámetros puede bloquear lógica de negocio -->
-        <exclude name="AvoidReassigningParameters"/>
         <!-- La declaración temprana es a veces intencional para legibilidad -->
         <exclude name="PrematureDeclaration"/>
         <exclude name="CallSuperInConstructor"/>
-        <exclude name="DefaultPackage"/>
     </rule>
 
     <!-- =================================================================
@@ -87,15 +75,13 @@
         <exclude name="TooManyMethods"/>
         <exclude name="TooManyFields"/>
         <exclude name="ExcessivePublicCount"/>
-        <exclude name="ExcessiveClassLength"/>
+        <exclude name="ExcessiveParameterList"/>
         <!-- Los DTOs y entidades son data classes por diseño -->
         <exclude name="DataClass"/>
         <!-- AvoidCatchingGenericException: consumers Kafka lo usan intencionalmente -->
         <exclude name="AvoidCatchingGenericException"/>
         <!-- Métodos que declaran Exception para compatibilidad con frameworks -->
         <exclude name="SignatureDeclareThrowsException"/>
-        <!-- Clases abstractas de dominio sin métodos abstractos son válidas -->
-        <exclude name="AbstractClassWithoutAbstractMethod"/>
         <!-- Law of Demeter incompatible con Spring/JPA fluent APIs -->
         <exclude name="LawOfDemeter"/>
         <!-- Ciclomática inherente a la lógica de validación de negocio -->
@@ -108,6 +94,8 @@
         <exclude name="AvoidThrowingRawExceptionTypes"/>
         <!-- Spring Boot main class no es una utility class -->
         <exclude name="UseUtilityClass"/>
+        <!-- Requiere configuración de paquetes; no aplica en este módulo -->
+        <exclude name="LoosePackageCoupling"/>
     </rule>
 
     <!-- =================================================================
@@ -120,8 +108,6 @@
         <exclude name="NonSerializableClass"/>
         <!-- Null checks explícitos son intencionales -->
         <exclude name="NullAssignment"/>
-        <!-- new Date() en setSentDate (protocolo MIME - comportamiento legacy) -->
-        <exclude name="UseObjectForClearerAPI"/>
         <exclude name="AvoidFieldNameMatchingMethodName"/>
         <exclude name="AvoidFieldNameMatchingTypeName"/>
         <exclude name="UseLocaleWithCaseConversions"/>
@@ -147,8 +133,6 @@
          PERFORMANCE
     ================================================================== -->
     <rule ref="category/java/performance.xml">
-        <!-- Spring DataJPA requiere boxing en ciertos contextos -->
-        <exclude name="AvoidInstantiatingObjectsJustToGetClass"/>
         <!-- indexOf(char) vs indexOf(String) — cambio trivial pero fuera de alcance -->
         <exclude name="UseIndexOfChar"/>
     </rule>

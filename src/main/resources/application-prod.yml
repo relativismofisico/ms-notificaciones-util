@@ -9,3 +9,9 @@ security:
       - EMPRESA
       - OPERARIO
       - FONDEADOR
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
