@@ -1,28 +1,448 @@
 {
-	"info": {
-		"_postman_id": "617fbbaa-d0c7-48d4-9e3d-cb19da296990",
-		"name": "ms-notificaciones-util",
-		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
-		"_exporter_id": "10415379"
-	},
-	"item": [
-		{
-			"name": "sendHTMLEmail",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{   \r\n    \"nombreRemitente\": \"John Fredy Redondo\",\r\n    \"correoRemitente\": \"relativismofisico@gmail.com\",\r\n    \"asunto\": \"Welcome new constomer\", \r\n    \"destinatarios\": [\"david.gaviria.tatis@gmail.com\"],\r\n    \"cuerpoTexto\": \"John Redondo\",\r\n    \"cuerpoHtml\": \"newCustomerPlus.html\",\r\n    \"firma\": \"Atentamente, Nombre de la Empresa\"\r\n\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": "http://localhost:8080/api/v1/sendHTMLEmail"
-			},
-			"response": []
-		}
-	]
+  "info": {
+    "_postman_id": "617fbbaa-d0c7-48d4-9e3d-cb19da296990",
+    "name": "ms-notificaciones-util",
+    "description": "Smoke tests para el microservicio ms-notificaciones-util.\n\n**Base URL:** `{{baseUrl}}`  (default: `http://localhost:8055/securityapi`)\n\n**Autenticación:** Bearer JWT. Asigna el token en la variable de colección `jwtToken` antes de ejecutar.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8055/securityapi",
+      "type": "string",
+      "description": "URL base del microservicio (incluye context-path)"
+    },
+    {
+      "key": "jwtToken",
+      "value": "",
+      "type": "string",
+      "description": "JWT Bearer token con rol ADMINISTRADOR, EMPRESA, OPERARIO o FONDEADOR"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwtToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "Notificaciones Correo",
+      "description": "Operaciones de envío de correos electrónicos vía SMTP — endpoint POST /notificarCorreo",
+      "item": [
+        {
+          "name": "Enviar correo HTML — 204 OK",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "pm.test('Body vacío en respuesta exitosa', function () {",
+                  "    pm.expect(pm.response.text()).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreRemitente\": \"Plataforma Factoring\",\n  \"correoRemitente\": \"notificaciones@factoring.co.com\",\n  \"asunto\": \"Instrucción de pago #INS-2024-001\",\n  \"destinatarios\": [\n    \"empresa@cliente.com\"\n  ],\n  \"destinatariosCc\": [\n    \"supervisor@factoring.co.com\"\n  ],\n  \"destinatariosBcc\": [\n    \"auditoria@factoring.co.com\"\n  ],\n  \"cuerpoHtml\": \"<h1>Instrucción procesada</h1><p>Estimado cliente, su instrucción de pago ha sido procesada exitosamente.</p>\",\n  \"firma\": \"Equipo Factoring | www.factoring.co.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notificarCorreo",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificarCorreo"]
+            },
+            "description": "Envía un correo con cuerpo HTML, CC y BCC. Espera respuesta 204 No Content."
+          },
+          "response": [
+            {
+              "name": "204 No Content — Correo enviado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwtToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombreRemitente\": \"Plataforma Factoring\",\n  \"correoRemitente\": \"notificaciones@factoring.co.com\",\n  \"asunto\": \"Instrucción de pago #INS-2024-001\",\n  \"destinatarios\": [\n    \"empresa@cliente.com\"\n  ],\n  \"cuerpoHtml\": \"<h1>Instrucción procesada</h1><p>Estimado cliente...</p>\",\n  \"firma\": \"Equipo Factoring | www.factoring.co.com\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/notificarCorreo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["notificarCorreo"]
+                }
+              },
+              "status": "No Content",
+              "code": 204,
+              "_postman_previewlanguage": "text",
+              "header": [],
+              "body": ""
+            }
+          ]
+        },
+        {
+          "name": "Enviar correo texto plano — 204 OK",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "pm.test('Body vacío en respuesta exitosa', function () {",
+                  "    pm.expect(pm.response.text()).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreRemitente\": \"Plataforma Factoring\",\n  \"correoRemitente\": \"notificaciones@factoring.co.com\",\n  \"asunto\": \"Notificación de pago procesado\",\n  \"destinatarios\": [\n    \"cliente@empresa.com\",\n    \"contacto@proveedor.com\"\n  ],\n  \"cuerpoTexto\": \"Estimado cliente, su instrucción de pago ha sido procesada correctamente.\",\n  \"firma\": \"Equipo Factoring | www.factoring.co.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notificarCorreo",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificarCorreo"]
+            },
+            "description": "Envía un correo con cuerpo en texto plano a múltiples destinatarios. Espera 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Enviar correo con adjunto — 204 OK",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 204 No Content', function () {",
+                  "    pm.response.to.have.status(204);",
+                  "});",
+                  "pm.test('Body vacío en respuesta exitosa', function () {",
+                  "    pm.expect(pm.response.text()).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreRemitente\": \"Plataforma Factoring\",\n  \"correoRemitente\": \"notificaciones@factoring.co.com\",\n  \"asunto\": \"Factura adjunta #FAC-2024-0012\",\n  \"destinatarios\": [\n    \"empresa@cliente.com\"\n  ],\n  \"cuerpoHtml\": \"<p>Estimado cliente, adjuntamos su factura correspondiente al período actual.</p>\",\n  \"firma\": \"Equipo Factoring | www.factoring.co.com\",\n  \"adjuntos\": [\n    {\n      \"nombreArchivo\": \"factura_001\",\n      \"extension\": \"pdf\",\n      \"archivoBase64\": \"JVBERi0xLjQKJcOkw7zDtsOfCjIgMCBvYmoKPDwvTGVuZ3RoIDMgMCBSL0ZpbHRlci9GbGF0ZURlY29kZT4+CnN0cmVhbQp4nCtUKkktLlGyUlAqS82rBAAiFQPeCmVuZHN0cmVhbQoyIDAgb2JqCjE2CmVuZG9iagozIDAgb2JqCjw8L1R5cGUvUGFnZS9NZWRpYUJveFswIDAgNTk1IDg0Ml0vUGFyZW50IDEgMCBSL1Jlc291cmNlczw8Pj4vQ29udGVudHMgMiAwIFI+PgplbmRvYmoKMSAwIG9iago8PC9UeXBlL1BhZ2VzL0tpZHNbMyAwIFJdL0NvdW50IDE+PgplbmRvYmoKNCAwIG9iago8PC9UeXBlL0NhdGFsb2cvUGFnZXMgMSAwIFI+PgplbmRvYmoKeHJlZgowIDUKMDAwMDAwMDAwMCA2NTUzNSBmIAowMDAwMDAwMjM5IDAwMDAwIG4gCjAwMDAwMDAxNTIgMDAwMDAgbiAKMDAwMDAwMDA3NCAwMDAwMCBuIAowMDAwMDAwMjg4IDAwMDAwIG4gCnRyYWlsZXIKPDwvU2l6ZSA1L1Jvb3QgNCAwIFI+PgpzdGFydHhyZWYKMzM3CiUlRU9GCg==\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notificarCorreo",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificarCorreo"]
+            },
+            "description": "Envía un correo con un archivo adjunto codificado en Base64. Espera 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "Sin token JWT — 401 Unauthorized",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401 Unauthorized', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "pm.test('Respuesta contiene campo status', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('status');",
+                  "    pm.expect(body.status).to.eql(401);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreRemitente\": \"Plataforma Factoring\",\n  \"correoRemitente\": \"notificaciones@factoring.co.com\",\n  \"asunto\": \"Test sin autenticación\",\n  \"destinatarios\": [\"cliente@empresa.com\"],\n  \"cuerpoTexto\": \"Este request no debe procesar.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notificarCorreo",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificarCorreo"]
+            },
+            "description": "Intenta llamar al endpoint sin token JWT. Espera 401 Unauthorized."
+          },
+          "response": [
+            {
+              "name": "401 Unauthorized — Token ausente",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"correoRemitente\": \"notificaciones@factoring.co.com\",\n  \"asunto\": \"Test\",\n  \"destinatarios\": [\"cliente@empresa.com\"]\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/notificarCorreo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["notificarCorreo"]
+                }
+              },
+              "status": "Unauthorized",
+              "code": 401,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": 401,\n  \"error\": \"Unauthorized\",\n  \"message\": \"Token JWT ausente o inválido\",\n  \"path\": \"/securityapi/notificarCorreo\",\n  \"timestamp\": \"2024-01-15T10:30:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Campos requeridos ausentes — 400 Bad Request",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 Bad Request', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "pm.test('Respuesta contiene campo status 400', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('status');",
+                  "    pm.expect(body.status).to.eql(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreRemitente\": \"Plataforma Factoring\",\n  \"cuerpoTexto\": \"Cuerpo sin campos requeridos\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notificarCorreo",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificarCorreo"]
+            },
+            "description": "Envía la solicitud omitiendo los campos obligatorios: `correoRemitente`, `asunto` y `destinatarios`. Espera 400 Bad Request."
+          },
+          "response": [
+            {
+              "name": "400 Bad Request — Campos requeridos ausentes",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwtToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"nombreRemitente\": \"Plataforma Factoring\",\n  \"cuerpoTexto\": \"Sin campos requeridos\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/notificarCorreo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["notificarCorreo"]
+                }
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": 400,\n  \"error\": \"Bad Request\",\n  \"message\": \"Validation failed for fields: correoRemitente, asunto, destinatarios\",\n  \"path\": \"/securityapi/notificarCorreo\",\n  \"timestamp\": \"2024-01-15T10:30:00Z\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Email malformado — 422 Unprocessable Entity",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 422 Unprocessable Entity', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "});",
+                  "pm.test('Respuesta contiene campo status 422', function () {",
+                  "    var body = pm.response.json();",
+                  "    pm.expect(body).to.have.property('status');",
+                  "    pm.expect(body.status).to.eql(422);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombreRemitente\": \"Plataforma Factoring\",\n  \"correoRemitente\": \"email-invalido-sin-arroba\",\n  \"asunto\": \"Test email malformado\",\n  \"destinatarios\": [\"otro-email-invalido\"],\n  \"cuerpoTexto\": \"Este correo tiene emails malformados.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/notificarCorreo",
+              "host": ["{{baseUrl}}"],
+              "path": ["notificarCorreo"]
+            },
+            "description": "Envía emails con formato inválido (sin @). La validación de negocio debe retornar 422 Unprocessable Entity."
+          },
+          "response": [
+            {
+              "name": "422 Unprocessable Entity — Email malformado",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  },
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{jwtToken}}"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"correoRemitente\": \"no-es-un-email\",\n  \"asunto\": \"Test\",\n  \"destinatarios\": [\"tampoco-un-email\"],\n  \"cuerpoTexto\": \"Test\"\n}"
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/notificarCorreo",
+                  "host": ["{{baseUrl}}"],
+                  "path": ["notificarCorreo"]
+                }
+              },
+              "status": "Unprocessable Entity",
+              "code": 422,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"status\": 422,\n  \"error\": \"Unprocessable Entity\",\n  \"message\": \"Dirección de correo inválida\",\n  \"path\": \"/securityapi/notificarCorreo\",\n  \"timestamp\": \"2024-01-15T10:30:00Z\"\n}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
